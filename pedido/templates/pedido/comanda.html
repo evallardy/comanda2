@@ -1,0 +1,902 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% block content %}
+<style>
+    .card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    border: solid 1px rgb(153, 156, 168);
+    border-radius: 10px;
+}
+
+.card-body {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.card-text {
+    flex-grow: 1;
+}
+
+.card .btn {
+    margin-top: auto;
+}
+#botonCarritoContainer {
+    position: fixed;
+    top: 50px;
+    right: 50px;
+    z-index: 1000;
+}
+
+#contadorCarrito {
+    font-size: 12px;
+    padding: 5px 8px;
+}
+</style>
+<div class="container mt-4">
+    <h2 class="text-center">Comandas</h2>
+    <form action="" method="post" id="formCarrito">
+        {% csrf_token %}
+        <button type="button" class="btn btn-info" onclick="activa_comanda()" id="activa_comanda">Existe</button>
+        <button type="submit" class="btn btn-success"  id="activa_comanda">Envia comanda</button>
+        <div class="row d-flex align-items-center mt-3">
+            <div id="comanda_existente">
+                Comandas : 
+                <select class="p-2" name="combo_mesa" id="id_combo_mesa" style="margin-left: 10px; border-radius: 8px;">
+                    <option value="" class="text-start"></option>
+                    {% for comanda in comandas %}
+                    <option value="{{ comanda.id }}" class="text-start">{{ comanda.mesa }} - {{ comanda.observacion }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div id="comanda_nueva">
+                <div class="mb-3">
+                    <label for="id_mesa" class="form-label">Mesa</label>
+                    <input type="text" class="form-control" name="mesa" id="id_mesa">
+                </div>
+                <div class="mb-3">
+                    <label for="id_observacion" class="form-label">Observación</label>
+                    <input type="text" class="form-control" name="observacion" id="id_observacion">
+                </div>
+            </div>
+        </div>
+    </form>
+    <div class="row" id="productosFiltrados">
+        {% for producto in datos.productos %}
+        <div class="mt-2 col-md-3 col-sm-4 col-xxl-2 col-xl-3 col-lg-3 col-4 d-flex align-items-stretch"> <!-- Hace que todas las cards tengan la misma altura -->
+            <div class="card mb-8 d-flex flex-column tarjetas">
+                <div class="card-body d-flex flex-column">
+                    {% if producto.imagen %}
+                    <img src="{{ producto.imagen.url }}" class="card-img-top" alt="{{ producto.nombre }}">
+                    {% endif %}
+                    <label id="nom_producto_{{ producto.id }}" class="card-text flex-grow-1">{{ producto.nombre }}</label>
+                    <p class="card-text">Precio: {{ producto.precio }}</p>
+                    <div class="row align-items-center">
+                        <div class="col-auto d-flex align-items-center">
+                            <button class="btn btn-info p-0 d-flex align-items-center justify-content-center" 
+                                style="width: 30px; height: 30px;" onclick="envia_carrito('producto','{{ producto.id }}','{{ producto.nombre }}','{{ producto.precio }}','{{ producto.tipo }}')">
+                                <img src="{% static 'core/img/carrito.svg' %}" width="20">
+                            </button>
+                        </div>
+                        <div class="col-auto">
+                            <input type="text" class="form-control text-center" name="cantidad_{{ producto.id }}" id="id_cantidad_{{ producto.id }}"
+                                style="width: 40px; height: 30px;"
+                                onfocusout="reformatear('id_cantidad_{{ producto.id }}')"
+                                onkeypress="return valideKeySinPunto(event);">
+                            <input type="text" name="area" id="id_area" value="{{producto.tipo}}" hidden>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        {% for paquete in datos.paquetes %}
+        <div class="mt-2 col-md-3 col-sm-4 col-xxl-2 col-xl-3 col-lg-3 col-4 d-flex align-items-stretch"> <!-- Hace que todas las cards tengan la misma altura -->
+            <div class="card mb-8 d-flex flex-column tarjetas">
+                <div class="card-body d-flex flex-column text-center">
+                    {% if paquete.tipo_paquete == 1 %} COMBO {% else %} PROMOCION {% endif %}
+                    {% if paquete.imagen %}
+                    <img src="{{ producto.imagen.url }}" class="card-img-top" alt="{{ producto.nombre }}">
+                    {% endif %}
+                    <label class="card-text flex-grow-1">{{ paquete.nombre }}</label>
+                    <p class="card-text">Precio: {{ paquete.precio }}</p>
+                </div>
+                <div class="row">
+                    <div class="col-auto row">
+                        <button class="btn btn-info p-1 d-flex align-items-center justify-content-start ms-3 mb-2" 
+                            style="width: 30px;" onclick="mostrarProductos('{{ paquete.id }}')">
+                            <img src="{% static 'core/img/detalles.svg' %}" width="20" />
+                        </button>
+                        <button class="btn btn-info p-1 d-flex align-items-center justify-content-center ms-1 mb-2" 
+                            style="width: 30px; height: 30px;" onclick="envia_carrito('{{ paquete.get_tipo_paquete_display }}','{{ paquete.id }}', '{{ paquete.nombre }}','{{ paquete.precio }}','{{ paquete.id }}')">
+                            <img src="{% static 'core/img/carrito.svg' %}" width="20">
+                        </button>
+                    </div>
+                    <div class="col-auto mb-2 ms-2" style="padding: 0;">
+                        <input type="text" class="form-control text-center" name="cantidad_p_{{ paquete.id }}" id="id_cantidad_p_{{ paquete.id }}"
+                            style="width: 45px; height: 30px;"
+                            onfocusout="reformatear('id_cantidad_p_{{ paquete.id }}')"
+                            onkeypress="return valideKeySinPunto(event);">
+                        <input type="text" name="area" id="id_area" value="{{ paquete.id }}" hidden>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+<!-- Modal de Bootstrap -->
+<div class="modal fade" id="modalProductos" tabindex="-1" aria-labelledby="modalProductosLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalProductosLabel">Productos</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Cantidad</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaProductos"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal del carrito -->
+<div class="modal fade" id="modalCarrito" tabindex="-1" aria-labelledby="modalCarritoLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalCarritoLabel">Carrito de Compras</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <table class="table" id="tabla_carrito">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th class="text-end">Cantidad</th>
+                            <th class="text-end">Precio</th>
+                            <th class="text-end">Total</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Aquí se agregarán los productos dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                Total : <label class="me-4" id="id_total_comanda"></label>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal para los insumos por producto -->
+<!-- 🔹 Modal HTML -->
+<div id="modalInsumos" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Seleccionar Insumos</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <form id="formInsumos"></form> <!-- 🔹 Aquí se agregarán dinámicamente los inputs -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="bt_modal_insumos" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="guardarInsumos" onclick="guardarInsumos()">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Botón fijo en la esquina superior derecha -->
+<div id="botonCarritoContainer">
+    <button class="btn btn-secondary position-relative rounded-circle d-flex align-items-center justify-content-center" 
+            id="botonCarrito" data-bs-toggle="modal" data-bs-target="#modalCarrito"
+            style="width: 50px; height: 50px;">
+        <img src="{% static 'core/img/carrito.svg' %}" width="20">
+        <span id="contadorCarrito" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+            0
+        </span>
+    </button>
+</div>
+<script>
+    $("#formCarrito").submit(function(event) {
+        event.preventDefault(); // Evitar el envío tradicional del formulario
+
+        if ($("#comanda_nueva").is(":visible")) {
+            comanda = 'Nueva';
+            mesa_numero = $("#id_mesa").val();
+            mesa_observacion = $("#id_observacion").val();
+            if (mesa_numero === '') { // Corregido aquí
+                alert('Teclee un número de mesa');
+                return 0;
+            }
+        } else {
+            comanda = 'Existe';
+            mesa_numero = $("#id_combo_mesa").val();
+            mesa_observacion = ''; // Ya está vacío, pero no olvides asignarlo
+            if (mesa_numero <= 0) {
+                alert('Seleccione una mesa');
+                return 0;
+            }
+        }
+
+        let productos = [];
+
+        $("#tabla_carrito tbody tr").each(function () {
+            let fila = $(this);
+            let producto = {
+                titulo: fila.find("td:eq(0)").text().trim(),
+                cantidad: fila.find("td:eq(1)").text().trim(),
+                precio: fila.find("td:eq(3)").text().trim(),
+                area: fila.find("td:eq(5)").text().trim(),
+                adicionales: fila.find("input").val() || "",
+                comanda: comanda,
+                mesa_numero: mesa_numero,
+                mesa_observacion: mesa_observacion,
+            };
+            productos.push(producto);
+        });
+
+        // 🔹 Enviar datos con AJAX
+        $.ajax({
+            url: "/pedido/guardar/", // Ruta en Django
+            type: "POST",
+            data: JSON.stringify({ 
+                productos: productos, 
+                csrfmiddlewaretoken: $("input[name=csrfmiddlewaretoken]").val(),
+            }),
+            contentType: "application/json",
+            success: function(response) {
+                alert("Datos guardados correctamente");
+                $("#tabla_carrito tbody").empty();
+                $("#id_total_comanda").text('');
+                $("#id_mesa").val('');
+                $("#id_observacion").val('');
+                renumerarFilas();
+                actualizarContadorCarrito();
+            },
+            error: function(error) {
+                alert("Error al guardar");
+            }
+        });
+    });
+    $(document).ready(function () {
+        $('#bt_modal_insumos').on('click', function() {
+            $('#modalInsumos').modal('hide');
+        });
+        $("#comanda_existente").hide();  // Oculta el div al cargar la página
+
+        $("#activa_comanda").click(function () {  // Agrega evento click al botón
+            if ($("#comanda_existente").is(":hidden")) {  // Verifica si está oculto
+                $("#comanda_existente").show();
+                $("#comanda_nueva").hide();
+                $("#activa_comanda").text('Nueva');
+                $.ajax({
+                    url: "/pedido/api/comandas/",  // URL de Django
+                    type: "GET",
+                    dataType: "json",
+                    success: function(data) {
+                        let select = $("#id_combo_mesa");
+                        select.empty();
+                        select.append('<option value="">Selecciona una comanda</option>');
+                        
+                        data.forEach(comanda => {
+                            select.append(`<option value="${comanda.id}">${comanda.mesa} - ${comanda.observacion}</option>`);
+                        });
+                    },
+                    error: function(error) {
+                        console.log("Error al obtener las comandas:", error);
+                    }
+                });
+            } else {
+                $("#comanda_existente").hide();
+                $("#comanda_nueva").show();
+                $("#activa_comanda").text('Existe');
+            }
+        });
+    });
+    function envia_carrito(tipo, producto_id, nombre_producto, precio,  area) {
+        input_cantidad = '';
+
+        if (tipo != 'producto') {
+            input_cantidad = $(`#id_cantidad_p_${producto_id}`);
+        } else {
+            input_cantidad = $(`#id_cantidad_${producto_id}`);
+        }
+
+        let cantidad = 0;
+
+        if ( tipo != 'producto' ) {
+            cantidad = $(`#id_cantidad_p_${producto_id}`).val().trim(); // Obtener cantidad
+        } else {
+            cantidad = $(`#id_cantidad_${producto_id}`).val().trim(); // Obtener cantidad
+        }
+
+        if (!cantidad || isNaN(cantidad) || cantidad <= 0) {
+            alert("Ingrese una cantidad válida.");
+            return;
+        }
+
+        if (!precio || isNaN(precio) || precio <= 0) {
+            alert("No tiene precio el producto.");
+            return;
+        }
+
+        $.ajax({
+            url: "/pedido/pedido/agregar_carrito/",  // Ruta en Django
+            type: "POST",
+            data: {
+                "tipo": tipo,
+                "producto_id": producto_id,
+                "nombre_producto": nombre_producto,
+                "cantidad": cantidad,
+                "precio": precio,
+                "area": area,
+                "csrfmiddlewaretoken": "{{ csrf_token }}"  // CSRF para evitar ataques
+            },
+            success: function (response) {
+
+                agregarProductoATabla(tipo, producto_id, nombre_producto, cantidad, response.adicionales, response.precio, response.area);
+
+                input_cantidad.val('');
+
+                alert("Se agregó al carrito.");
+
+            },
+            error: function () {
+                alert("Error al agregar al carrito.");
+            }
+        });
+    }
+    function agregarProductoATabla(tipo, producto_id, nombre_producto, cantidad, adicionales, precio, area) {
+
+        // Si no existe, agregar una nueva fila
+        let titulo = '';
+        let accion_boton = `insumos_producto`;
+        let productos = [];
+
+        if (tipo !== 'producto') {
+            titulo = `<strong>${tipo}</strong><br>`;
+            accion_boton = `producto_paquete`;
+
+            // Recorrer insumos y almacenarlos correctamente
+            adicionales.producto.forEach((producto) => {
+
+                let articulo = [];
+
+                cantidad_productos = cantidad * producto.cantidad;
+
+                for (let index = 0; index < cantidad_productos; index++) {
+                    articulo.push({
+                        'insumos': producto.insumos,
+                    });
+                }
+
+                productos.push({
+                    'nombre': producto.nombre,
+                    'producto': articulo,
+                    'area': area,
+                });
+
+            });
+        } else {
+            // Recorrer insumos y almacenarlos correctamente
+            adicionales.insumos.forEach((producto) => {
+                let insumos = [];
+
+                producto.forEach((insumo) => {
+                    insumos.push({
+                        'grupo': insumo.grupo,
+                        'nombre': insumo.nombre,
+                        'opcion': insumo.opcion,
+                        'valor': insumo.valor,
+                        'id': insumo.id,
+                        'id_grupo': insumo.id_grupo,
+                    });
+                });
+
+                let articulo = [];
+
+                articulo.push({
+                    'insumos': insumos,
+                });
+
+                productos.push({
+                    'nombre': nombre_producto,
+                    'producto': articulo,
+                });
+            });
+        }
+
+        // 🔹 Convertir `adicionales` a JSON antes de asignarlo al input
+        let productosJSON = JSON.stringify(productos);
+
+        let tabla = $("#tabla_carrito tbody");
+
+        let linea = tabla.find("tr").length + 1;
+
+        let total = cantidad * precio;
+
+        let nuevaFila = ` 
+            <tr id="fila_producto_${linea}"> 
+                <td class="align-middle">${titulo} ${nombre_producto}</td>
+                <td class="cantidad align-middle text-end">${cantidad}</td>
+                <td class="align-middle" hidden>
+                    <input type="text" class="form-control" name="adicionales_${linea}" id="id_adicionales_${linea}">
+                </td>
+                <td class="precio align-middle text-end">${precio}</td>
+                <td class="total_comanda align-middle text-end">${total}</td>
+                <td class="align-middle text-end" id="id_area" hidden >${area}</td>
+                <td class="align-middle">
+                    <button class="btn btn-danger btn-sm" onclick="eliminarProducto(this)">Eliminar</button>
+                    <button class="btn btn-info btn-sm" onclick="${accion_boton}(this)">Detalle</button>
+                </td>
+            </tr>
+        `;
+
+        tabla.append(nuevaFila);
+
+        $("#id_adicionales_" + linea).val(productosJSON);
+
+        total_comanda = 0;
+
+        $(".total_comanda").each(function() {
+            total_comanda += parseInt($(this).text()) || 0;
+        });
+
+        $("#id_total_comanda").text(total_comanda);
+
+        actualizarContadorCarrito();
+    }
+
+    function insumos_producto(boton) {
+        let fila = $(boton).closest("tr");
+        let valor = fila.find("input").val();
+
+        // 🔹 Convertir la cadena JSON en un objeto de JavaScript
+        let datos = JSON.parse(valor);
+
+        // 🔹 Limpiar el contenido del modal
+        let modalBody = $('#modalBody');
+        modalBody.empty();
+
+        contador_insumos = 0;
+
+        contador_productos = 0;
+
+        contador_grupo = 0;
+
+        sw_opcion_seleccionada = 0;
+
+        // 🔹 Recorrer cada producto
+        datos.forEach((articulo, index1) => {
+            articulo.producto.forEach((producto, index2) => {
+
+                let nombre_producto = datos[index1].nombre;
+
+                contador_productos += 1;
+
+                let productoHTML = `<h5 class="mt-3">${nombre_producto}</h5><hr>`;
+
+                modalBody.append(productoHTML);
+
+                // 🔹 Agrupar insumos por `grupo`
+                let grupos = {};
+
+                producto.insumos.forEach(insumo => {
+                    if (!grupos[insumo.grupo]) {
+                        grupos[insumo.grupo] = [];
+                    }
+                    grupos[insumo.grupo].push(insumo);
+                });
+
+                // 🔹 Crear los inputs organizados por grupo
+                let gruposHTML = "";
+
+                grupo_anterior = '';
+
+                for (grupo in grupos) {
+
+                    gruposHTML += `<h6 class="mt-2">${grupo}</h6>`;
+
+                    grupos[grupo].forEach(insumo => {
+                        let inputHTML = '';
+
+                        contador_insumos += 1;
+
+                        if (grupo_anterior !== insumo.grupo) {
+                            grupo_anterior = insumo.grupo;
+                            if (sw_opcion_seleccionada === 1) {
+                                $("#"+activa_rb).prop("checked", true);
+                            }
+                            sw_opcion_seleccionada = 0;
+                            if (insumo.opcion === 'rb') {
+                                contador_grupo += 1;
+                            }
+                        }
+
+                        if (insumo.opcion === 'rb') {
+                            // Radio button (solo una opción por grupo)
+                            inputHTML = `
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="grupo_${contador_grupo}_${insumo.id_grupo}" id="opcion_${contador_insumos}_${insumo.id}" value="${insumo.nombre}" ${insumo.valor === 1 ? 'checked' : ''}>
+                                    <label class="form-check-label" for="grupo_${contador_insumos}_${insumo.id}">
+                                        ${insumo.nombre}
+                                    </label>
+                                </div>
+                            `;
+                            if (sw_opcion_seleccionada === 0) {
+                                sw_opcion_seleccionada = 1;
+                                activa_rb = `opcion_${contador_insumos}_${insumo.id}`;
+                            }
+                            if (insumo.valor == 1) {
+                                sw_opcion_seleccionada = 2;
+                            }
+                        } else if (insumo.opcion === 'cb') {
+                            // Checkbox (varias opciones posibles)
+                            inputHTML = `
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="grupo_${contador_insumos}_${insumo.id_grupo}" id="opcion_${contador_insumos}_${insumo.id}" value="1" ${insumo.valor === 1 ? 'checked' : ''}>
+                                    <label class="form-check-label" for="grupo_${contador_insumos}_${insumo.id}">
+                                        ${insumo.nombre}
+                                    </label>
+                                </div>
+                            `;
+                        }
+
+                        modalBody.append(inputHTML);
+                    });
+                }
+
+
+                if (sw_opcion_seleccionada === 1) {
+                    $("#"+activa_rb).prop("checked", true);
+                }
+
+            });
+        });
+
+        $("#guardarInsumos").attr("onclick", "guardarInsumos()");
+
+        // 🔹 Mostrar el modal
+        $('#modalInsumos').modal('show');
+
+        // 🔹 Guardar la referencia de la fila para actualizarla después
+        $('#modalInsumos').data('fila', fila);
+
+    }
+
+    function producto_paquete(boton) {
+        let fila = $(boton).closest("tr");
+        let valor = fila.find("input").val();
+
+        // 🔹 Convertir la cadena JSON en un objeto de JavaScript
+        let datos = JSON.parse(valor);
+
+        // 🔹 Limpiar el contenido del modal
+        let modalBody = $('#modalBody');
+        modalBody.empty();
+
+        contador_insumos = 0;
+
+        contador_grupo = 0;
+
+        grupo_anterior = '';
+
+        sw_opcion_seleccionada = 0;
+
+        // 🔹 Recorrer cada producto
+        datos.forEach((articulo, index1) => {
+            articulo.producto.forEach((producto, index2) => {
+
+                let nombre_producto = datos[index1].nombre;
+
+                let productoHTML = `<h5 class="mt-3">${nombre_producto}</h5><hr>`;
+
+                modalBody.append(productoHTML);
+
+
+                // 🔹 Agrupar insumos por `grupo`
+                let grupos = {};
+
+                producto.insumos[0].forEach(insumo => {
+                    if (!grupos[insumo.grupo]) {
+                        grupos[insumo.grupo] = [];
+                    }
+                    grupos[insumo.grupo].push(insumo);
+                });
+
+                // 🔹 Crear los inputs organizados por grupo
+                let gruposHTML = "";
+
+                grupo_anterior = '';
+
+                for (grupo in grupos) {
+
+                    gruposHTML += `<h6 class="mt-2">${grupo}</h6>`;
+
+                    grupos[grupo].forEach(insumo => {
+                        let inputHTML = '';
+
+                        contador_insumos += 1;
+
+                        if (grupo_anterior !== insumo.grupo) {
+                            grupo_anterior = insumo.grupo;
+                            if (sw_opcion_seleccionada === 1) {
+                                $("#"+activa_rb).prop("checked", true);
+                            }
+                            sw_opcion_seleccionada = 0;
+                            if (insumo.opcion === 'rb') {
+                                contador_grupo += 1;
+                            }
+                        }
+
+                        if (insumo.opcion === 'rb') {
+                            // Radio button (solo una opción por grupo)
+                            inputHTML = `
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="grupo_${contador_grupo}_${insumo.id_grupo}" id="opcion_${contador_insumos}_${insumo.id}" value="${insumo.nombre}" ${insumo.valor === 1 ? 'checked' : ''}>
+                                    <label class="form-check-label" for="grupo_${contador_insumos}_${insumo.id}">
+                                        ${insumo.nombre}
+                                    </label>
+                                </div>
+                            `;
+                            if (sw_opcion_seleccionada === 0) {
+                                sw_opcion_seleccionada = 1;
+                                activa_rb = `opcion_${contador_insumos}_${insumo.id}`;
+                            }
+                            if (insumo.valor == 1) {
+                                sw_opcion_seleccionada = 2;
+                            }
+                        } else if (insumo.opcion === 'cb') {
+                            // Checkbox (varias opciones posibles)
+                            inputHTML = `
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="grupo_${contador_insumos}_${insumo.id_grupo}" id="opcion_${contador_insumos}_${insumo.id}" value="1" ${insumo.valor === 1 ? 'checked' : ''}>
+                                    <label class="form-check-label" for="grupo_${contador_insumos}_${insumo.id}">
+                                        ${insumo.nombre}
+                                    </label>
+                                </div>
+                            `;
+                        }
+                       
+                        modalBody.append(inputHTML);
+                    });
+                }
+
+                if (sw_opcion_seleccionada === 1) {
+                    $("#"+activa_rb).prop("checked", true);
+                }
+
+            });
+        });
+
+        $("#guardarInsumos").attr("onclick", "guardarPaquete()");
+
+        // 🔹 Mostrar el modal
+        $('#modalInsumos').modal('show');
+
+        // 🔹 Guardar la referencia de la fila para actualizarla después
+        $('#modalInsumos').data('fila', fila);
+    }
+
+    function guardarInsumos() {
+        let fila = $('#modalInsumos').data('fila');
+        let valor = fila.find("input").val();
+
+        // 🔹 Convertir la cadena JSON en un objeto de JavaScript
+        let datos = JSON.parse(valor);
+
+        contador_insumos = 0;
+
+        // 🔹 Recorrer cada producto y actualizar valores seleccionados
+
+        contador_grupo = 0;
+
+        grupo_anterior = '';
+
+        sw_paquete = 0;
+
+        datos.forEach((producto, index) => {
+
+            grupos = {};
+
+            producto.producto[0].insumos.forEach(insumo => {
+                if (!grupos[insumo.grupo]) {
+                    grupos[insumo.grupo] = [];
+                }
+                grupos[insumo.grupo].push(insumo);
+            });
+
+            
+            grupo_anterior = '';
+
+            // 🔹 Actualizar valores seleccionados
+            for (grupo in grupos) {
+
+                grupos[grupo].forEach(insumo => {
+
+                    contador_insumos += 1;
+
+                    if (grupo_anterior !== grupo) {
+                        grupo_anterior = grupo;
+                        if (insumo.opcion  === 'rb') {
+                            contador_grupo += 1;
+                        }
+                    }
+
+                    if (insumo.opcion === 'rb') {
+                        let seleccionado = $(`input[name="grupo_${contador_grupo}_${insumo.id_grupo}"]:checked`).val();
+                        insumo.valor = seleccionado === insumo.nombre ? 1 : 0;
+                    } else if (insumo.opcion === 'cb') {
+                        let seleccionado = $(`#opcion_${contador_insumos}_${insumo.id}`).prop('checked') ? 1 : 0;
+                        insumo.valor = seleccionado;
+                    }
+                });
+            }
+        });
+
+        // 🔹 Actualizar el input con el nuevo JSON
+        let adicionalesJSON = JSON.stringify(datos);
+        fila.find("input").val(adicionalesJSON);
+
+        // 🔹 Cerrar el modal
+        $('#modalInsumos').modal('hide');
+    }
+
+    function guardarPaquete() {
+        let fila = $('#modalInsumos').data('fila');
+        let valor = fila.find("input").val();
+
+        // 🔹 Convertir la cadena JSON en un objeto de JavaScript
+        let datos = JSON.parse(valor);
+
+        contador_insumos = 0;
+
+        // 🔹 Recorrer cada producto y actualizar valores seleccionados
+
+        contador_producto = -1;
+
+        contador_grupo = 0;
+
+        grupo_anterior = '';
+
+        sw_paquete = 0;
+
+        datos.forEach((productos, index) => {
+
+            grupos = {};
+
+            contador_producto += 1;
+
+            grupo_anterior = '';
+
+            productos.producto.forEach(producto => {
+                for (insumo in producto.insumos) {
+                    grupo_anterior = '';
+                    for (reg in producto.insumos[insumo]) {
+                        dato = producto.insumos[insumo];
+                        grupo = producto.insumos[insumo][reg].grupo;
+                        opcion = producto.insumos[insumo][reg].opcion;
+                        nombre = producto.insumos[insumo][reg].nombre;
+                        id = producto.insumos[insumo][reg].id;
+                        id_grupo = producto.insumos[insumo][reg].id_grupo;
+
+                        contador_insumos += 1;
+
+                        if (grupo_anterior !== grupo) {
+                            grupo_anterior = grupo;
+                            if (opcion  === 'rb') {
+                                contador_grupo += 1;
+                            }
+                        }
+
+                        if (opcion === 'rb') {
+                            let seleccionado = $(`input[name="grupo_${contador_grupo}_${id_grupo}"]:checked`).val();
+                            producto.insumos[insumo][reg].valor = seleccionado === nombre ? 1 : 0;
+                        } else if (opcion === 'cb') {
+                            let seleccionado = $(`#opcion_${contador_insumos}_${id}`).prop('checked') ? 1 : 0;
+                            producto.insumos[insumo][reg].valor = seleccionado;
+                        }
+                    }
+                };
+            });
+        });
+
+        // 🔹 Actualizar el input con el nuevo JSON
+        let adicionalesJSON = JSON.stringify(datos);
+        fila.find("input").val(adicionalesJSON);
+
+        // 🔹 Cerrar el modal
+        $('#modalInsumos').modal('hide');
+    }
+
+    function eliminarProducto(button) {
+        // Eliminar la fila correspondiente
+        $(button).closest("tr").remove();
+
+        // ✅ Renumerar IDs y actualizar el contador del carrito
+        renumerarFilas();
+        actualizarContadorCarrito();
+        total_comanda = 0;
+
+        $(".total_comanda").each(function() {
+            total_comanda += parseInt($(this).text()) || 0;
+        });
+
+        $("#id_total_comanda").text(total_comanda);
+
+    }
+
+    function renumerarFilas() {
+        $("#tabla_carrito tbody tr").each(function (index) {
+            let nuevoNumero = index + 1; // Nuevo número consecutivo
+
+            // Actualizar el ID del <tr>
+            $(this).attr("id", `fila_producto_${nuevoNumero}`);
+
+            // Actualizar la columna con el número de fila
+            $(this).find(".numero").text(nuevoNumero);
+
+            // Actualizar el nombre e ID del input oculto
+            let input = $(this).find("input");
+            input.attr("name", `adicionales_${nuevoNumero}`);
+            input.attr("id", `id_adicionales_${nuevoNumero}`);
+        });
+    }
+    function actualizarContadorCarrito() {
+        let totalProductos = 0;
+
+        // Sumar todas las cantidades de productos en la tabla
+        $("#tabla_carrito tbody tr").each(function () {
+            totalProductos += parseInt($(this).find(".cantidad").text());
+        });
+
+        // Actualizar el número en el badge
+        $("#contadorCarrito").text(totalProductos);
+
+        // Si no hay productos, ocultar el badge
+        $("#contadorCarrito").toggle(totalProductos > 0);
+    }
+
+    function mostrarProductos(paquete_id) {
+        $.ajax({
+            url: '/pedido/pedido/productos_paquete/' + paquete_id + '/',  
+            type: "GET",
+            dataType: "json",
+            success: function (data) {
+                let tabla = $("#tablaProductos");
+                tabla.empty();  // Limpiar la tabla antes de agregar nuevos datos
+
+                data.productos.forEach(producto => {
+                    tabla.append(`
+                        <tr>
+                            <td>${producto.nombre}</td>
+                            <td>${producto.cantidad}</td>
+                        </tr>
+                    `);
+                });
+
+                $("#modalProductos").modal("show"); // Mostrar el modal
+            },
+            error: function () {
+                alert("Error al obtener los productos.");
+            }
+        });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends "core/base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center">QR para solicitar canciones</h2>
+
+    <!-- Select para filtrar por comanda -->
+    <div class="mb-3">
+        <img src="{{ qr_url }}" alt="QR del curso" class="img-fluid d-block mx-auto">
+    </div>
+</div>
+{% endblock %}

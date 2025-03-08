@@ -1,0 +1,135 @@
+{% extends "core/base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center">{% if object %}Editar{% else %}Nuevo{% endif %} Paquete</h2>
+    
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="d-flex justify-content-between mb-3">
+            <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#modalProductos">Productos</button>
+            <a class="btn btn-warning" href="{% url 'paquetes' %}">Regresar</a>
+            <button type="submit" class="btn btn-success">Guardar</button>
+        </div>
+        <div class="mb-3">
+            {{ form.as_p }}
+        </div>
+    </form>
+
+    <!-- Modal de Productos -->
+    <div class="modal fade" id="modalProductos" tabindex="-1" aria-labelledby="modalProductosLabel" aria-hidden="true"> 
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalProductosLabel">Seleccionar Productos</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <h5>Productos Disponibles</h5>
+                    <ul class="list-group">
+                        {% for producto in productos %}
+                        <li class="list-group-item">
+                            <div class="col-12 row">
+                                <div class="col-6">
+                                    <input type="checkbox" name="cb_productos_{{ producto.id }}" id="id_producto_{{ producto.id }}"
+                                        {% if producto.seleccionado %} checked value="1" {% else %} value="0" {% endif %}>
+                                        {{ producto.nombre }}
+                                </div>
+                                <div class="col-6">
+                                    <input type="text" class="form-control" value="{{ producto.cantidad }}" 
+                                        id="id_cantidad_{{ producto.id }}" name="cantidad_{{ producto.id }}">
+                                </div>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-primary" id="agregarProductos" data-bs-dismiss="modal">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // Función para agregar los productos seleccionados a la sesión
+    document.getElementById('agregarProductos').addEventListener('click', function() {
+        var selectedProductos = [];
+        // Obtener los productos seleccionados
+        document.querySelectorAll('input[name^="cb_productos_"]:checked').forEach(function(checkbox) {
+            let productoId = checkbox.value;
+            let cadena = checkbox.name;
+            let numero = cadena.split("_").pop(); 
+            let cantidad = parseFloat(document.querySelector(`input[name='cantidad_${numero}']`)?.value || 0);
+            
+            selectedProductos.push({
+                'id': numero,
+                'cantidad': cantidad
+            });
+        });
+
+        // Guardar los productos seleccionados en la sesión (usando Django's session management)
+        let csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        $.ajax({
+            url: "{% url 'guardar_productos_en_sesion' %}",
+            type: 'POST',
+            data: JSON.stringify({ 'productos': selectedProductos }),  // Corregido: usar "data" en lugar de "body"
+            contentType: 'application/json',  // Especificar el tipo de contenido JSON
+            headers: {
+                'X-CSRFToken': csrftoken  // Agregar el token CSRF en los headers
+            },
+            dataType: 'json',
+            success: function (data) {
+                console.log("Datos guardados en sesión:", data);
+            },
+            error: function (xhr, status, error) {
+                console.log("Error en AJAX:", error);
+                console.log("Respuesta del servidor:", xhr.responseText);  // Para ver el mensaje del servidor
+            }
+        });
+    });
+    $(document).ready(function () {
+        
+        '{% if object %}'
+            $('#agregarProductos').trigger('click');
+        '{% endif %}'
+
+        // Primero, verificar si el tipo de paquete es '1' al cargar la página
+        let seleccionElemento = $('#id_tipo_paquete').val();
+
+        if (seleccionElemento === '1') {
+            // Ocultar los campos y etiquetas, y limpiar el valor
+            $("#id_fecha_inicio, #id_fecha_fin").hide().val('');
+            $("label[for='id_fecha_inicio'], label[for='id_fecha_fin']").hide();
+        } else {
+            // Mostrar los campos y etiquetas si no es '1'
+            $("#id_fecha_inicio, #id_fecha_fin").show();
+            $("label[for='id_fecha_inicio'], label[for='id_fecha_fin']").show();
+        }
+
+        // Asociar el evento 'change' para cambios futuros
+        $('#id_tipo_paquete').on('change', function () {
+            let seleccionElemento = $(this).val();
+
+            if (seleccionElemento === '1') {
+                // Ocultar los campos y etiquetas, y limpiar el valor
+                $("#id_fecha_inicio, #id_fecha_fin").hide().val('');
+                $("label[for='id_fecha_inicio'], label[for='id_fecha_fin']").hide();
+            } else {
+                // Mostrar los campos y etiquetas
+                $("#id_fecha_inicio, #id_fecha_fin").show();
+                $("label[for='id_fecha_inicio'], label[for='id_fecha_fin']").show();
+            }
+        });
+
+        '{% if fecha_inicio %}'
+            $('#id_fecha_inicio').val('{{ fecha_inicio }}');
+            $('#id_fecha_fin').val('{{ fecha_fin }}');
+        '{% endif %}'
+    });
+</script>
+{% endblock %}

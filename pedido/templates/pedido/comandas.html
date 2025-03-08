@@ -1,0 +1,94 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% load form_filters %}
+{% block content %}
+{% load static %}
+    <div class="container mt-4">
+        <h2 class="text-center">Consulta de comandas</h2>
+
+        <!-- Select para filtrar por comanda -->
+        <div class="mb-3">
+            <label for="comandaSelect" class="form-label">Comandas :</label>
+            <select id="comandaSelect" class="form-select">
+                <option value="">-- Seleccione comanda --</option>
+                {% for comanda in comandas %}
+                    <option value="{{ comanda.id }}">{{ comanda }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+
+        <!-- Tabla con checkboxes -->
+        <form id="cajaForm" method="POST" action="{% url 'pagar_caja' %}">
+            {% csrf_token %}
+            <table class="table table-striped table-bordered mt-3">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Comanda</th>
+                        <th>Descripción</th>
+                        <th class="text-end">Cantidad</th>
+                        <th class="text-end">Importe</th>
+                        <th>Estatus</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for caja in cajas %}
+                        <tr data-comanda="{{ caja.comanda.id }}">
+                            <td>{{ caja.comanda }}
+                            </td>
+                            <td>{{ caja.descripcion }}</td>
+                            <td class="text-end">{{ caja.cantidad }}</td>
+                            <td class="text-end">${{ caja.importe }}</td>
+                            <td>
+                                
+                                {% if caja_estatus|get_item:caja.id == 'Pagado' %}
+                                <label class="badge bg-success">
+                                {% elif caja_estatus|get_item:caja.id == 'Por pagar' %}
+                                <label class="badge bg-warning">
+                                {% elif caja_estatus|get_item:caja.id == 'En proceso de entrega' %}
+                                <label class="badge bg-danger">
+                                {% else %}
+                                <label class="badge bg-info">
+                                {% endif %}
+                                {{ caja_estatus|get_item:caja.id }}
+                                </label>
+
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </form>
+    </div>
+    
+
+    <script>
+        document.querySelectorAll("tbody tr").forEach(row => {
+            const rows = document.querySelectorAll("tbody tr");
+            selectedComanda = "";
+            if (selectedComanda === "Q") {
+                row.style.display = "";
+            } else {
+                row.style.display = "none";
+            }
+        });
+        document.addEventListener("DOMContentLoaded", function () {
+            const comandaSelect = document.getElementById("comandaSelect");
+
+            // Evento para filtrar por comanda
+            comandaSelect.addEventListener("change", function () {
+                const selectedComanda = this.value;
+                const rows = document.querySelectorAll("tbody tr");
+
+                document.querySelectorAll("tbody tr").forEach(row => {
+                    if (selectedComanda === "Q" || row.getAttribute("data-comanda") === selectedComanda) {
+                        row.style.display = "";
+                    } else {
+                        row.style.display = "none";
+                    }
+                });
+
+            });
+        });
+    </script>
+{% endblock %}

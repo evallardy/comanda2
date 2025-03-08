@@ -1,0 +1,24 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% block content %}
+    <div class="container mt-4">
+        {% if opcion == 1 or opcion == 2 %}
+        <h2 class="mb-4">Elaborado</h2>
+        <p>¿Se eleboró el producto "<strong>{{ object.producto }}</strong>"?</p>
+        {% elif opcion == 3 %}
+        <h2 class="mb-4">Entregado</h2>
+        <p>¿Se entrgó el producto "<strong>{{ object.producto }}</strong>"?</p>
+        {% endif %}
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success">Sí, Atender</button>
+            {% if opcion == 1 %}
+            <a href="{% url 'accion' 1 %}" class="btn btn-secondary">Regresar</a>
+            {% elif opcion == 2 %}
+            <a href="{% url 'accion' 2 %}" class="btn btn-secondary">Regresar</a>
+            {% elif opcion == 3 %}
+            <a href="{% url 'accion' 3 %}" class="btn btn-secondary">Regresar</a>
+            {% endif %}
+        </form>
+    </div>
+{% endblock %}

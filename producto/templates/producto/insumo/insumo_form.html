@@ -1,0 +1,54 @@
+{% extends "core/base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center">{% if form.instance.pk %}Editar Insumo{% else %}Nuevo Insumo{% endif %}</h2>
+    <div class="card">
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label for="id_grupo" class="form-label">Grupo</label>
+                    {{ form.grupo }}
+                </div>
+
+                <div class="mb-3">
+                    <label for="id_nombre" class="form-label">Nombre</label>
+                    {{ form.nombre }}
+                </div>
+
+                <div class="mb-3">
+                    <label for="id_nombre" class="form-label">Vender</label>
+                    {{ form.venta }}
+                </div>
+
+                <div class="mb-3">
+                    <label for="id_nombre" class="form-label">Precio</label>
+                    {{ form.precio }}
+                </div>
+
+                <div class="mb-3">
+                    <label for="id_estatus" class="form-label">Estatus</label>
+                    {{ form.estatus }}
+                </div>
+
+                <div class="mb-3">
+                    <label for="id_imagen" class="form-label">Imagen</label><br>
+                    
+                    {% if form.instance.imagen %}
+                        <img src="{{ form.instance.imagen.url }}" class="img-thumbnail mb-2" style="width: 100px; height: 100px;">
+                    {% endif %}
+
+                    {{ form.imagen }}
+                </div>
+
+                <div class="text-end">
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                    <a href="{% url 'insumos' %}" class="btn btn-secondary">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

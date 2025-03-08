@@ -1,0 +1,14 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% block content %}
+    <div class="container mt-4">
+        <h2 class="mb-4">Cancelación</h2>
+        <p>¿Se cancela el producto "<strong>{{ object.producto }}</strong>"?</p>
+        <p>De la mesa "<strong>{{ object.caja.comanda.mesa }} / {{ object.caja.comanda.observacion }}</strong>"</p>
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success">Sí, Cancelar</button>
+            <a href="{% url 'accion' opcion %}" class="btn btn-secondary">Regresar</a>
+        </form>
+    </div>
+{% endblock %}

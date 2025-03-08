@@ -1,0 +1,25 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center">{% if object %}Editar{% else %}Nuevo{% endif %} Grupo</h2>
+    
+    <form method="post" class="bg-light p-4 rounded shadow">
+        {% csrf_token %}
+        <p>
+            <label for="id_nombre">Nombre:</label>
+            <input type="text" name="nombre" value="{{ object.nombre }}" class="form-control" placeholder="Nombre del grupo" 
+                maxlength="255" required="" id="id_nombre">
+        </p>
+        <p {% if not object %} hidden {% endif %}>
+            <label for="id_estatus">Estatus: {{ object.estatus }}</label>
+            <select name="estatus" class="form-control" id="id_estatus">
+              <option value="0" {% if object.estatus == 0 %} selected {% endif %}>Baja</option>
+              <option value="1" {% if not object or object.estatus == 1 %} selected {% endif %}>Activo</option>
+            </select>
+        </p>
+        <button type="submit" class="btn btn-primary">Guardar</button>
+        <a href="{% url 'grupos' %}" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>
+{% endblock %}

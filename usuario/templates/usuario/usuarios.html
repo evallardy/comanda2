@@ -1,0 +1,65 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block blcss %}
+{% load bootstrap4 %}
+{% bootstrap_css %}
+{% bootstrap_javascript jquery='full' %}
+{% endblock %}
+{% block contenido %}
+{% if user.is_authenticated and usuarios_perm %}
+<div class="d-flex justify-content-center">
+    <div class="col-6 col-xs-5 col-sm-5 col-md-5 col-lg-3 col-xl-3 col-xxl-2 text-center">
+        <h2 class="cuadro">Usuarios</h2>
+    </div>
+</div>
+<div class="row d-flex justify-content-center" style="padding: 20px;">
+    {% if crea_usuario_perm %}
+    <div class="col-6 col-xs-5 col-sm-5 col-md-5 col-lg-3 col-xl-3 col-xxl-2 text-center">
+        <a href="{% url 'registro' %}" class="btn btn-info cuadro-boton">Nuevo</a>
+    </div>
+    {% endif %}
+    <div class="col-6 col-xs-5 col-sm-5 col-md-5 col-lg-3 col-xl-3 col-xxl-2 text-center">
+        <a href="{% url 'index' %}" class="btn btn-info cuadro-boton">Regresar</a>
+    </div>
+</div>
+<div class="d-flex justify-content-center">
+    <div class="cuadro col-12 col-xs-11 col-sm-10 col-md-10 col-lg-9 col-xl-8 col-xxl-8">
+        <table class="table table-striped" id="tabla-cocina">
+            <thead>
+                <tr class="text-center">
+                    <th class="col-4">Nombre</th>
+                    <th class="col-2">Usuario</th>
+                    <th class="col-3">Correo</th>
+                    <th class="col-2">Celular</th>
+                    <th class="col-1"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in usuarios %}
+                <tr>
+                    <td class="align-middle">
+                        {% if modifica_usuario_perm %}
+                        <a href="{% url 'mod_usuario' user.id %}" style="text-decoration: none; font-weight: bold; font-style: italic;">
+                        {{ user.first_name }} {{ user.last_name }}
+                        </a>
+                        {% else %}
+                        <a href="#" style="text-decoration: none; ">
+                            {{ user.first_name }} {{ user.last_name }}
+                        </a>    
+                        {% endif %}
+                    </td>
+                    <td class="text-center align-middle">{{ user.username }}</td>
+                    <td class="text-center align-middle">{{ user.email|default_if_none:"" }}</td>
+                    <td class="text-center align-middle">{{ user.celular|default_if_none:"" }}</td>
+                    <td class="align-middle">
+                        <input class="form-check-input" type="checkbox" {% if user.cliente %}checked{% endif %} disable>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

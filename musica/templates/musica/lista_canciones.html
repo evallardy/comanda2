@@ -1,0 +1,39 @@
+{% extends 'core/base.html' %}
+{% block headJS %}
+<meta http-equiv="refresh" content="10">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <form action="" method="post">
+        {% csrf_token %}
+        <h1>Lista de Canciones Pendientes</h1>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Título</th>
+                    <th>Artista</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody id="tabla-canciones">
+                {% for cancion in canciones %}
+                <tr id="fila-{{ cancion.id }}">
+                    <td>{{ cancion.titulo }}</td>
+                    <td>{{ cancion.artista|default_if_none:"" }}</td>
+                    <td>
+                        <a href="{% url 'cambiar_estatus_cancion' cancion.id  %}" class="btn btn-success btn-cambiar-estatus" >
+                            Reproducida
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3" class="text-center">No hay canciones pendientes</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </form>
+</div>
+{% endblock %}
