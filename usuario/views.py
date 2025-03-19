@@ -6,6 +6,8 @@ from django.views.generic import ListView, CreateView, UpdateView, DeleteView, V
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.models import Permission
+from django.http import JsonResponse
 
 from usuario.models import Usuario
 from .forms import UsuarioForm, UsuarioFormEdit, CambiaContrasenaForm
@@ -17,7 +19,7 @@ class usuarios(LoginRequiredMixin, ListView):
     context_object_name = 'usuarios'
     def get_queryset(self):
         queryset = super().get_queryset()
-        queryset = Usuario.objects.exclude(username='iagevm').exclude(username='jcamarillo')
+        queryset = Usuario.objects.exclude(username='iagevm').exclude(username='jcamarillo').exclude(username='evallardy')
         # Puedes realizar filtros o manipulaciones adicionales en el queryset si es necesario
         return queryset
     def get_context_data(self, **kwargs):
@@ -85,9 +87,9 @@ def registro(request):
             formulario.save()
             return redirect(to="usuarios")
         data["form"] = formulario
-    return render(request, 'registration/registro.html', data)
+    return render(request, 'usuario/registro.html', data)
 
-class cambiar_contrasena(LoginRequiredMixin, View):
+class Cambiar_contrasena(LoginRequiredMixin, View):
     template_name = 'usuario/cambiar_contrasena.html'
     form_class = CambiaContrasenaForm
     success_url = reverse_lazy("index")
@@ -108,3 +110,46 @@ class cambiar_contrasena(LoginRequiredMixin, View):
         else:
             form = self.form_class(request.POST)
             return render(request, self.template_name, {'form': form})
+
+class Permisos_usuario(LoginRequiredMixin, View):
+    template_name = 'usuario/permisos_usuario.html'
+    def get(self, request):
+        # Obtener todos los usuarios y permisos
+        users = Usuario.objects.filter(is_active=1).exclude(username=self.request.user.username) \
+            .exclude(username='iagevm').exclude(username='jcamarillo').exclude(cliente=1)
+        # Renderizar el formulario con los datos necesarios
+        context = {
+            'users': users,
+        }
+        context['accesos_perm'] = self.request.user.has_perm('core.accesos')
+        context['accesos_modificar_perm'] = self.request.user.has_perm('core.accesos_modificar')
+        return render(request, self.template_name, context)
+    def post(self, request):
+        # Obtener el ID del usuario seleccionado y los permisos asignados
+        user_id = request.POST.get('usuario', None)
+        if user_id is None or user_id == '0':
+            pass
+        else:
+            permissions = request.POST.getlist('permissions', [])
+
+            # Actualizar los permisos del usuario seleccionado
+            if user_id:
+                try:
+                    user = Usuario.objects.get(id=user_id)
+                    user.user_permissions.set(permissions)
+                except User.DoesNotExist:
+                    pass
+        # Redirigir a la página de éxito o a alguna otra página
+        return HttpResponseRedirect(reverse('accesos'))
+
+@login_required
+def todos_permisos(request, id):
+    user = Usuario.objects.get(id=id)
+    usuario_permisos = set(user.user_permissions.values_list('id', flat=True))
+    contable_permissions = Permission.objects.filter(content_type__model='usuario').exclude(codename__startswith='Can ').order_by('codename')
+    permisos = list(Permission.objects.filter(content_type__model='usuario').exclude(name__startswith='Can ').values().order_by('name'))
+    data = {
+        'permisos': permisos,
+        'usuario_permisos': list(usuario_permisos),
+    }
+    return JsonResponse(data)

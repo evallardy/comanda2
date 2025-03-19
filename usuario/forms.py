@@ -61,6 +61,11 @@ class UsuarioFormEdit(forms.ModelForm):
         self.fields['celular'].required = True
         self.fields['email'].required = True
         self.fields['is_active'].required = False
+        
+        for form in self.visible_fields():
+            if not (form.name == 'cliente' or form.name == 'is_active'):
+                form.field.widget.attrs['class'] = 'form-control'
+
 
 class CambiaContrasenaForm(forms.Form):
     password1 = forms.CharField(

@@ -23,9 +23,6 @@ urlpatterns = [
     path('guardar_pago/', guardar_pago, name='guardar_pago'),
     path('comandas/', ComandasView.as_view(), name='comandas'),
 
-    path('usuario/', DetalleListView.as_view(), name='usuario'),
-    path('accesos/', DetalleListView.as_view(), name='accesos'),
     path('cierre/', CierreView.as_view(), name='cierre'),
-    path('apertura/', DetalleListView.as_view(), name='apertura'),
 
 ]
