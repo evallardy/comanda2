@@ -517,7 +517,10 @@ class ComandasView(ListView):
                 if all(est == 3 for est in estatus_detalles):
                     estado = 'Por pagar'
                 else:
-                    estado = 'En proceso de entrega'
+                    if all(est == 0 for est in estatus_detalles):
+                        estado = 'Cancelada' 
+                    else:
+                        estado = 'En proceso de entrega' 
             else:
                 estado = 'Cancelado'
 
