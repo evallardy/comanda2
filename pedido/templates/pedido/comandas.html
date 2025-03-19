@@ -40,15 +40,14 @@
                             <td class="text-end">{{ caja.cantidad }}</td>
                             <td class="text-end">${{ caja.importe }}</td>
                             <td>
-                                
                                 {% if caja_estatus|get_item:caja.id == 'Pagado' %}
                                 <label class="badge bg-success">
                                 {% elif caja_estatus|get_item:caja.id == 'Por pagar' %}
                                 <label class="badge bg-warning">
                                 {% elif caja_estatus|get_item:caja.id == 'En proceso de entrega' %}
-                                <label class="badge bg-danger">
-                                {% else %}
                                 <label class="badge bg-info">
+                                {% else %}
+                                <label class="badge bg-danger">
                                 {% endif %}
                                 {{ caja_estatus|get_item:caja.id }}
                                 </label>
