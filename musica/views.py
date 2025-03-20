@@ -21,7 +21,6 @@ from pedido.models import DiaContable
 from .models import Cancion
 from .forms import CancionesForm
 
-
 class SolicitarMusicaView(View):
     def get(self, request, token):
         try:
@@ -46,7 +45,7 @@ class SolicitarMusicaView(View):
 
         return render(request, 'musica/solicitar_musica.html', {'form': form, 'dia_contable': dia_contable})
 
-client_id =  settings.CLIENT_ID
+client_id = settings.CLIENT_ID
 client_secret = settings.CLIENT_SECRET
 redirect_uri = settings.REDIRECT_URI
 
@@ -65,14 +64,17 @@ def spotify_callback(request):
     if code:
         token_info = sp_oauth.get_access_token(code)
         request.session['spotify_token'] = token_info['access_token']
-        return redirect('/musica/lista/')
+        return redirect('/musica/lista')
     else:
-        return redirect('/error/')
+        pass
+        return redirect('/error')
 
 def cambiar_estatus_cancion(request, id):
     cancion = get_object_or_404(Cancion, id=id)
 
     if cancion.estatus == 'NO':
+
+#        request.session.pop('spotify_token', None)
 
         token = request.session.get('spotify_token')
 
@@ -81,8 +83,8 @@ def cambiar_estatus_cancion(request, id):
 
         sp = spotipy.Spotify(auth=token)
 
-        playlist_id = 'https://open.spotify.com/playlist/729CSyaetSSlBtxbh2dBOp'
-
+        playlist_id = 'https://open.spotify.com/playlist/729CSyaetSSlBtxbh2dBOp?si=cb02a7b340754c45'
+        
         try:
             # ✅ Pasar directamente el valor de la URI
             sp.playlist_add_items(playlist_id, [cancion.uri])
@@ -96,12 +98,12 @@ def cambiar_estatus_cancion(request, id):
                 estatus='NO'
             ).order_by('fecha_solicitud')
 
-            return render(request, '/musica/lista_canciones.html', {'canciones': canciones})
+            return render(request, 'musica/lista_canciones.html', {'canciones': canciones})
         
         except spotipy.exceptions.SpotifyException as e:
-            return render(request, '/musica/lista_canciones.html', {'error': f"Error en Spotify: {e}"})
+            return render(request, 'musica/lista_canciones.html', {'error': f"Error en Spotify: {e}"})
         except Exception as e:
-            return render(request, '/musica/lista_canciones.html', {'error': f"Error inesperado: {e}"})
+            return render(request, 'musica/lista_canciones.html', {'error': f"Error inesperado: {e}"})
     else:
         dia_contable = get_object_or_404(DiaContable, estatus=1)
         canciones = Cancion.objects.filter(
@@ -110,7 +112,6 @@ def cambiar_estatus_cancion(request, id):
         ).order_by('fecha_solicitud')
 
         return render(request, 'musica/lista_canciones.html', {'canciones': canciones})
-
 
 def ponEnLista(request, uri, artistas, nombre, album):
 
