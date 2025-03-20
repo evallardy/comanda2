@@ -95,12 +95,12 @@ def cambiar_estatus_cancion(request, id):
                 estatus='NO'
             ).order_by('fecha_solicitud')
 
-            return render(request, 'musica/lista_canciones.html', {'canciones': canciones})
+            return render(request, '/musica/lista_canciones.html', {'canciones': canciones})
         
         except spotipy.exceptions.SpotifyException as e:
-            return render(request, 'musica/lista_canciones.html', {'error': f"Error en Spotify: {e}"})
+            return render(request, '/musica/lista_canciones.html', {'error': f"Error en Spotify: {e}"})
         except Exception as e:
-            return render(request, 'musica/lista_canciones.html', {'error': f"Error inesperado: {e}"})
+            return render(request, '/musica/lista_canciones.html', {'error': f"Error inesperado: {e}"})
     else:
         dia_contable = get_object_or_404(DiaContable, estatus=1)
         canciones = Cancion.objects.filter(
