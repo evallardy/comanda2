@@ -1,3 +1,10 @@
+
+import sys
+import spotipy
+from spotipy.oauth2 import SpotifyClientCredentials
+from spotipy.oauth2 import SpotifyOAuth
+from django.shortcuts import get_object_or_404, render
+
 from django.views.generic import ListView
 from django.urls import reverse
 from django.http import JsonResponse
@@ -37,6 +44,147 @@ class SolicitarMusicaView(View):
             return redirect(f"{reverse('solicitar_musica', kwargs={'token': token})}?mensaje=Registrada")
 
         return render(request, 'musica/solicitar_musica.html', {'form': form, 'dia_contable': dia_contable})
+
+client_id = '47fa7162042946cda1a6658a070dfba8'
+client_secret = 'ade07911d4f84911a38aa2fbc4bcf3a7'
+redirect_uri = 'http://localhost:8000/callback'
+
+scope = 'playlist-modify-public playlist-modify-private user-library-modify'
+
+sp_oauth = SpotifyOAuth(
+    client_id=client_id,
+    client_secret=client_secret,
+    redirect_uri=redirect_uri,
+    scope=scope,
+    cache_path='.spotify_cache'
+)
+
+def spotify_callback(request):
+    code = request.GET.get('code')
+    if code:
+        token_info = sp_oauth.get_access_token(code)
+        request.session['spotify_token'] = token_info['access_token']
+        return redirect('/musica/lista')
+    else:
+        return redirect('/error')
+
+def cambiar_estatus_cancion(request, id):
+    cancion = get_object_or_404(Cancion, id=id)
+
+    if cancion.estatus == 'NO':
+
+        token = request.session.get('spotify_token')
+
+        if not token:
+            return redirect(sp_oauth.get_authorize_url())
+
+        sp = spotipy.Spotify(auth=token)
+
+        playlist_id = 'https://open.spotify.com/playlist/729CSyaetSSlBtxbh2dBOp?si=cb02a7b340754c45'
+        
+        try:
+            # ✅ Pasar directamente el valor de la URI
+            sp.playlist_add_items(playlist_id, [cancion.uri])
+
+            cancion.estatus = 'SI'
+            cancion.save(update_fields=['estatus'])
+
+            dia_contable = get_object_or_404(DiaContable, estatus=1)
+            canciones = Cancion.objects.filter(
+                dia_contable=dia_contable,
+                estatus='NO'
+            ).order_by('fecha_solicitud')
+
+            return render(request, 'musica/lista_canciones.html', {'canciones': canciones})
+        
+        except spotipy.exceptions.SpotifyException as e:
+            return render(request, 'musica/lista_canciones.html', {'error': f"Error en Spotify: {e}"})
+        except Exception as e:
+            return render(request, 'musica/lista_canciones.html', {'error': f"Error inesperado: {e}"})
+    else:
+        dia_contable = get_object_or_404(DiaContable, estatus=1)
+        canciones = Cancion.objects.filter(
+            dia_contable=dia_contable,
+            estatus='NO'
+        ).order_by('fecha_solicitud')
+
+        return render(request, 'musica/lista_canciones.html', {'canciones': canciones})
+
+
+def ponEnLista(request, uri, artistas, nombre, album):
+
+    dia_contable = DiaContable.objects.filter(estatus=1).first()
+    
+    cancion = Cancion.objects.create (
+        dia_contable = dia_contable,
+        uri = uri,
+        artista = artistas,
+        titulo = nombre,
+        album = album,
+    )
+
+    return JsonResponse({'respuesta': "OK"})
+
+def listaCancionesTodas(request, autor, cancion):
+
+    sp = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials(client_id, client_secret))
+
+    encontro = False
+
+    busqueda = str(autor) + " / " + str(cancion)
+
+    result = sp.search(autor)
+
+    canciones = []
+    for i in range(0, len(result["tracks"]["items"])):
+        musica = str(result["tracks"]["items"][i]["name"]).upper()
+        musica1 = str(cancion).upper()
+        if musica1 in musica:
+            encontro = True
+            canciones.append({
+                "artista": result["tracks"]["items"][i]["artists"],
+                "album": result["tracks"]["items"][i]["album"]["name"],
+                "nombre": result["tracks"]["items"][i]["name"],
+                'uri': result["tracks"]["items"][i]["uri"],
+                })
+
+    return JsonResponse({'canciones': canciones, 'encontro': encontro,})
+
+def listaCancionesAutor(request, autor):
+
+    sp = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials(client_id, client_secret))
+
+    encontro = False
+    result = sp.search(autor)
+    canciones = []
+    for i in range(0, len(result["tracks"]["items"])):
+        encontro = True
+        canciones.append({
+            "artista": result["tracks"]["items"][i]["artists"],
+            "album": result["tracks"]["items"][i]["album"]["name"],
+            "nombre": result["tracks"]["items"][i]["name"],
+            'uri': result["tracks"]["items"][i]["uri"],
+        })
+
+    return JsonResponse({'canciones': canciones, 'encontro': encontro,})
+
+def listaCanciones(request, cancion):
+
+    sp = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials(client_id, client_secret))
+
+    encontro = False
+    result = sp.search(cancion)
+    canciones = []
+    for i in range(0, len(result["tracks"]["items"])):
+        encontro = True
+        canciones.append({
+            "artista": result["tracks"]["items"][i]["artists"],
+            "album": result["tracks"]["items"][i]["album"]["name"],
+            "nombre": result["tracks"]["items"][i]["name"],
+            'uri': result["tracks"]["items"][i]["uri"],
+            })
+
+    return JsonResponse({'canciones': canciones, 'encontro': encontro,})
 
 class PresentaQRView(LoginRequiredMixin,View):
     def get(self, request, *args, **kwargs):
@@ -164,10 +312,3 @@ class ListaCancionesView(ListView):
         context['token'] = self.kwargs.get("token")
         return context
 
-def cambiar_estatus_cancion(request, id):
-    cancion = get_object_or_404(Cancion, id=id)
-    cancion.estatus = 'SI'
-    cancion.save()
-    dia_contable = get_object_or_404(DiaContable, estatus=1)
-    canciones = Cancion.objects.filter(dia_contable=dia_contable, estatus='NO').order_by('fecha_solicitud')
-    return render(request, 'musica/lista_canciones.html', {'canciones': canciones})

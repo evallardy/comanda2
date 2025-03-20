@@ -4,6 +4,7 @@ from django.urls import path, include
 from django.conf.urls.static import static
 
 from core.views import *
+from musica.views import spotify_callback
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -15,4 +16,6 @@ urlpatterns = [
     path('pedido/', include('pedido.urls')),
     path('usuario/', include('usuario.urls')),
     path('accounts/', include('django.contrib.auth.urls')),
+    path('callback/', spotify_callback, name='spotify_callback'),
+
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

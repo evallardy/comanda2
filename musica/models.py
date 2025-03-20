@@ -12,6 +12,8 @@ class Cancion(models.Model):
     dia_contable = models.ForeignKey(DiaContable, on_delete=models.CASCADE, related_name="solicitudes")
     titulo = models.CharField("Título de la Canción", max_length=255, default='')
     artista = models.CharField("Artista", max_length=255, null=True, blank=True)
+    album = models.CharField("Album", max_length=255, null=True, blank=True)
+    uri = models.CharField("Id spotify", max_length=100, null=True, blank=True)
     estatus = models.CharField("Estatus", max_length=2, default='NO', choices=PUESTA)
     fecha_solicitud = models.DateTimeField("Fecha de Solicitud", auto_now_add=True)
 

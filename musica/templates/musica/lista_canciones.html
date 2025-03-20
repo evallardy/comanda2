@@ -1,6 +1,11 @@
 {% extends 'core/base.html' %}
 {% block headJS %}
-<meta http-equiv="refresh" content="10">
+<script>
+    // Esta función recarga la página cada 10 segundos
+    setInterval(function() {
+        location.reload();
+    }, 10000); // 10000 ms = 10 segundos
+</script>
 {% endblock %}
 
 {% block content %}
@@ -13,7 +18,8 @@
                 <tr>
                     <th>Título</th>
                     <th>Artista</th>
-                    <th>Acción</th>
+                    <th>Álbum</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody id="tabla-canciones">
@@ -21,9 +27,10 @@
                 <tr id="fila-{{ cancion.id }}">
                     <td>{{ cancion.titulo }}</td>
                     <td>{{ cancion.artista|default_if_none:"" }}</td>
-                    <td>
+                    <td>{{ cancion.album|default_if_none:"" }}</td>
+                    <td class="text-start">
                         <a href="{% url 'cambiar_estatus_cancion' cancion.id  %}" class="btn btn-success btn-cambiar-estatus" >
-                            Reproducida
+                            Agrega a la lista
                         </a>
                     </td>
                 </tr>
