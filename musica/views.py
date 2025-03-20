@@ -47,7 +47,7 @@ class SolicitarMusicaView(View):
 
 client_id = '47fa7162042946cda1a6658a070dfba8'
 client_secret = 'ade07911d4f84911a38aa2fbc4bcf3a7'
-redirect_uri = 'http://localhost:8000/callback'
+redirect_uri = 'http://comanda2.iagmexico.com/callback/'
 
 scope = 'playlist-modify-public playlist-modify-private user-library-modify'
 
