@@ -21,6 +21,7 @@ from pedido.models import DiaContable
 from .models import Cancion
 from .forms import CancionesForm
 
+
 class SolicitarMusicaView(View):
     def get(self, request, token):
         try:
@@ -45,9 +46,9 @@ class SolicitarMusicaView(View):
 
         return render(request, 'musica/solicitar_musica.html', {'form': form, 'dia_contable': dia_contable})
 
-client_id = '47fa7162042946cda1a6658a070dfba8'
-client_secret = 'ade07911d4f84911a38aa2fbc4bcf3a7'
-redirect_uri = 'https://comanda2.iagmexico.com/callback/'
+client_id =  settings.CLIENT_ID
+client_secret = settings.CLIENT_SECRET
+redirect_uri = settings.REDIRECT_URI
 
 scope = 'playlist-modify-public playlist-modify-private user-library-modify'
 
@@ -64,9 +65,9 @@ def spotify_callback(request):
     if code:
         token_info = sp_oauth.get_access_token(code)
         request.session['spotify_token'] = token_info['access_token']
-        return redirect('/musica/lista')
+        return redirect('/musica/lista/')
     else:
-        return redirect('/error')
+        return redirect('/error/')
 
 def cambiar_estatus_cancion(request, id):
     cancion = get_object_or_404(Cancion, id=id)
