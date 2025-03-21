@@ -13,6 +13,7 @@ import qrcode
 import base64
 from io import BytesIO
 from django.shortcuts import render, get_object_or_404, redirect
+from django.urls import reverse_lazy
 from django.views import View
 from uuid import UUID
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
@@ -64,10 +65,10 @@ def spotify_callback(request):
     if code:
         token_info = sp_oauth.get_access_token(code)
         request.session['spotify_token'] = token_info['access_token']
-        return redirect('/musica/lista')
+        return redirect(reverse_lazy("musica"))
     else:
         pass
-        return redirect('/error')
+        return redirect(reverse_lazy("musica"))
 
 def cambiar_estatus_cancion(request, id):
     cancion = get_object_or_404(Cancion, id=id)
