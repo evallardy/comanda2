@@ -4,6 +4,7 @@ import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 from spotipy.oauth2 import SpotifyOAuth
 from django.shortcuts import get_object_or_404, render
+from django.http import Http404
 
 from django.views.generic import ListView
 from django.urls import reverse
@@ -27,6 +28,29 @@ class SolicitarMusicaView(View):
         try:
             token_uuid = token.hex  # Convierte el string en UUID
             dia_contable = get_object_or_404(DiaContable, token=token, estatus=1)
+            form = CancionesForm()
+            canciones = Cancion.objects.filter(estatus='NO', dia_contable=dia_contable)
+            return render(request, 'musica/solicitar_musica.html', {'form': form, 'canciones': canciones})
+        except ValueError:
+            raise Http404("Token inválido")
+
+    def post(self, request, token):
+        dia_contable = get_object_or_404(DiaContable, estatus=1)
+        form = CancionesForm(request.POST)
+
+        if form.is_valid():
+            cancion = form.save(commit=False)
+            cancion.dia_contable = dia_contable
+            cancion.save()
+            Registrada='Registrada'
+            return redirect(f"{reverse('solicitar_musica', kwargs={'token': token})}?mensaje=Registrada")
+
+        return render(request, 'musica/solicitar_musica.html', {'form': form, 'dia_contable': dia_contable})
+    
+class Solicitar1MusicaView(View):
+    def get(self, request):
+        try:
+            dia_contable = get_object_or_404(DiaContable, estatus=1)
             form = CancionesForm()
             canciones = Cancion.objects.filter(estatus='NO', dia_contable=dia_contable)
             return render(request, 'musica/solicitar_musica.html', {'form': form, 'canciones': canciones})

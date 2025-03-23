@@ -20,7 +20,7 @@ def index(request):
         activo = False
 
     opciones_menus = ['Comanda', 'Bar',  'Cocina', 'Caja', 'Entregas', 'Consulta', 'Comandas', 'Servicios', 'Catálogo', 
-        'Usuarios', 'Accesos', 'Cierre', 'Presenta', 'Musica']  # Lista en lugar de set
+        'Usuarios', 'Accesos', 'Cierre', 'Complace','Presenta', 'Musica']  # Lista en lugar de set
 
     # Crear la estructura JSON correcta
     menus_json = [{"opcion": p,
