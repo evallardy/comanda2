@@ -83,11 +83,11 @@ def cambiar_estatus_cancion(request, id):
             return redirect(sp_oauth.get_authorize_url())
 
         # Intentar refrescar el token si es inválido
-        token_info = sp_oauth.get_cached_token()
-        if not token_info or token_info['expires_at'] < time.time():
-            token_info = sp_oauth.refresh_access_token(token_info['refresh_token'])
-            request.session['spotify_token'] = token_info['access_token']
-            token = request.session.get('spotify_token')
+#        token_info = sp_oauth.get_cached_token()
+#        if not token_info or token_info['expires_at'] < time.time():
+#            token_info = sp_oauth.refresh_access_token(token_info['refresh_token'])
+#            request.session['spotify_token'] = token_info['access_token']
+#            token = request.session.get('spotify_token')
 
         sp = spotipy.Spotify(auth=token)
 
