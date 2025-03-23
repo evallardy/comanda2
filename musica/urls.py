@@ -1,12 +1,12 @@
 from django.urls import path
 from .views import (
     SolicitarMusicaView, PresentaQRView, ListaCancionesView, cambiar_estatus_cancion, listaCancionesTodas,
-    listaCancionesAutor, listaCanciones, ponEnLista, spotify_callback
+    listaCancionesAutor, listaCanciones, ponEnLista, spotify_callback, Solicitar1MusicaView
     )
 
 urlpatterns = [
     path('solicitar/<uuid:token>/', SolicitarMusicaView.as_view(), name='solicitar_musica'),
-    path('solicitar/', SolicitarMusicaView.as_view(), name='complace'),
+    path('solicitar/', Solicitar1MusicaView.as_view(), name='complace'),
     path('presenta_qr/', PresentaQRView.as_view(), name='presenta'),
     
     path('lista/', ListaCancionesView.as_view(), name='musica'),
