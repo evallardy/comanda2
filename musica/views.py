@@ -91,7 +91,9 @@ def cambiar_estatus_cancion(request, id):
 
         sp = spotipy.Spotify(auth=token)
 
-        playlist_id = 'https://open.spotify.com/playlist/729CSyaetSSlBtxbh2dBOp?si=cb02a7b340754c45'
+        # playlist_id = 'https://open.spotify.com/playlist/729CSyaetSSlBtxbh2dBOp?si=cb02a7b340754c45'
+
+        playlist_id = 'https://open.spotify.com/playlist/1kqvA32aSXZkgag8AbG1w4?si=hwMKjrdkRmG38LUG31XL0Q&pi=SXUuSX4uSDiJZ'
         
         try:
             # ✅ Pasar directamente el valor de la URI
