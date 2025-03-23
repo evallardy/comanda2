@@ -95,7 +95,8 @@ def cambiar_estatus_cancion(request, id):
 
 #        playlist_id = 'https://open.spotify.com/playlist/1kqvA32aSXZkgag8AbG1w4?si=hwMKjrdkRmG38LUG31XL0Q&pi=SXUuSX4uSDiJZ'
 #        playlist_id = 'https://open.spotify.com/playlist/1kqvA32aSXZkgag8AbG1w4?si=jPsctQQ_TmGyi-66aWfvhg&pi=7Fsk_L2vTFeCc'
-        playlist_id = 'https://open.spotify.com/playlist/1kqvA32aSXZkgag8AbG1w4?si=jPsctQQ_TmGyi-66aWfvhg'
+        playlist_id = 'https://open.spotify.com/playlist/1kqvA32aSXZkgag8AbG1w4?'
+#                       https://open.spotify.com/playlist/1kqvA32aSXZkgag8AbG1w4?si=-Knb2NNqSYK-RBUJroIl4A&pi=0ELbLGL0See5z
  
         
         try:
