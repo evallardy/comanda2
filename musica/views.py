@@ -57,8 +57,8 @@ sp_oauth = SpotifyOAuth(
     client_secret=client_secret,
     redirect_uri=redirect_uri,
     scope=scope,
-    cache_path='.spotify_cache'
 )
+#     cache_path='.spotify_cache'
 
 def spotify_callback(request):
     code = request.GET.get('code')
