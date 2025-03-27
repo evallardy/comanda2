@@ -1,3 +1,5 @@
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import login_required
 import json
 import re
 from django.http.response import HttpResponse, HttpResponseRedirect
@@ -18,7 +20,7 @@ from .models import DiaContable, Caja, Detalle, Comanda, Servicio, Pago
 
 # Create your views here.
 
-class ComandaView(View):
+class ComandaView(LoginRequiredMixin, View):
     template_name = 'pedido/comanda.html'
 
     def get(self, request):
@@ -46,6 +48,7 @@ class ComandaView(View):
 #        request.session['cart'] = cart
         return JsonResponse({'success': True})
 
+@login_required
 def obtener_productos_paquete(request, paquete_id):
     paquete = get_object_or_404(Paquete, id=paquete_id)
     productos = PaqueteProducto.objects.filter(paquete=paquete).select_related('producto')
@@ -61,6 +64,7 @@ def obtener_productos_paquete(request, paquete_id):
 
     return JsonResponse({"productos": productos_lista})
 
+@login_required
 def agregar_al_carrito(request):
     if request.method == "POST":
         producto_id = int(request.POST.get("producto_id", 0))
@@ -191,7 +195,7 @@ def agregar_al_carrito(request):
 
     return JsonResponse({"error": "Método no permitido."}, status=405)    
 
-@csrf_exempt  # Si no estás usando CSRF token en AJAX, solo para pruebas
+@login_required
 def guardar_datos(request):
     if request.method == "POST":
         try:
@@ -278,12 +282,13 @@ def guardar_datos(request):
 
     return JsonResponse({"error": "Método no permitido"}, status=400)
 
+@login_required
 def obtener_comandas(request):
     comandas = Comanda.objects.all().values("id", "mesa", "observacion")
     return JsonResponse(list(comandas), safe=False)
 
 # Vista para listar los detalles
-class DetalleListView(ListView):
+class DetalleListView(LoginRequiredMixin, ListView):
     model = Detalle
     template_name = 'pedido/detalle_list.html'
     context_object_name = 'detalles'
@@ -342,7 +347,7 @@ class DetalleAtenderView(UpdateView):
         return redirect('accion', opcion)  # Corrige la sintaxis de `redirect`
     
 # Vista para marcar como atendido
-class DetalleCancelarView(UpdateView):
+class DetalleCancelarView(LoginRequiredMixin, UpdateView):
     model = Detalle
     fields = []  # No usamos formulario, solo actualizamos el estatus
     template_name = 'pedido/detalle_cancelar.html'
@@ -383,7 +388,7 @@ class DetalleCancelarView(UpdateView):
 
         return redirect('accion', opcion)  # Corrige la sintaxis de `redirect`
 
-class CajaListView(ListView):
+class CajaListView(LoginRequiredMixin, ListView):
     model = Caja
     template_name = 'pedido/caja_list.html'
     context_object_name = 'cajas'
@@ -415,6 +420,7 @@ class CajaListView(ListView):
         context['caja_estatus'] = caja_estatus
         return context
 
+@login_required
 def pagar_caja(request):
     if request.method == "POST":
         caja_ids = request.POST.getlist("cajas")  # Obtiene los IDs seleccionados
@@ -428,6 +434,7 @@ def pagar_caja(request):
         return JsonResponse({"message": "Pago procesado correctamente"})
     return redirect("caja_list")        
 
+@login_required
 def guardar_pago(request):
     if request.method == 'POST':
         importe_efectivo = request.POST.get('importe_efectivo')
@@ -454,16 +461,20 @@ def guardar_pago(request):
 
                 if pagos_ids:  # Verificar que haya IDs antes de actualizar
                     actualizados = Caja.objects.filter(id__in=pagos_ids).update(estatus=2,caja_grupo=pago)
-                    return JsonResponse({"mensaje": f"{actualizados} pagos actualizados correctamente"}, status=200)
+                    return redirect(reverse_lazy("caja"))
+#                    return JsonResponse({"mensaje": f"{actualizados} pagos actualizados correctamente"}, status=200)
                 else:
-                    return JsonResponse({"error": "No se encontraron pagos válidos para actualizar"}, status=400)
+                    return redirect(reverse_lazy("caja"))
+#                    return JsonResponse({"error": "No se encontraron pagos válidos para actualizar"}, status=400)
 
             except (json.JSONDecodeError, ValueError, ValidationError) as e:
-                return JsonResponse({"error": f"Error en el formato de datos: {str(e)}"}, status=400)
+                return redirect(reverse_lazy("caja"))
+#                return JsonResponse({"error": f"Error en el formato de datos: {str(e)}"}, status=400)
 
-    return JsonResponse({"error": "Método no permitido"}, status=405)
+    return redirect(reverse_lazy("caja"))
+#    return JsonResponse({"error": "Método no permitido"}, status=405)
 
-class ServicioListView(ListView):
+class ServicioListView(LoginRequiredMixin, ListView):
     model = Servicio
     template_name = 'servicio_list.html'
     context_object_name = 'servicios'
@@ -493,7 +504,7 @@ class ServicioListView(ListView):
         context['fechas_alta'] = DiaContable.objects.order_by('-fecha_alta')
         return context
 
-class ComandasView(ListView):
+class ComandasView(LoginRequiredMixin, ListView):
     model = Caja
     template_name = 'pedido/comandas.html'
     context_object_name = 'cajas'
@@ -530,7 +541,7 @@ class ComandasView(ListView):
         context['caja_estatus'] = caja_estatus
         return context
 
-class CierreView(View):
+class CierreView(LoginRequiredMixin, View):
     template_name = 'pedido/cierre.html'
 
     def get(self, request):

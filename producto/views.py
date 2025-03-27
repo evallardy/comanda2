@@ -1,3 +1,5 @@
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import login_required
 import json
 from django.db.models.functions import Coalesce
 from django.db.models import Case, When, Value, CharField, F, OuterRef, Subquery, IntegerField, Q
@@ -12,6 +14,7 @@ from .forms import GrupoForm, InsumoForm, ProductoForm, PaqueteForm
 
 # Create your views here.
 
+@login_required
 def catalogo(request):
     template_name = 'producto/catalogo.html'
 
@@ -26,7 +29,7 @@ def catalogo(request):
 
     return render(request, template_name, {'menus': menus_json})  # Pasar como diccionario
 
-class GrupoListView(ListView):
+class GrupoListView(LoginRequiredMixin, ListView):
     model = Grupo
     template_name = 'producto/grupo/grupo_list.html'
     context_object_name = 'grupos'
@@ -50,24 +53,24 @@ class GrupoListView(ListView):
 
         return Grupo.objects.order_by(ordenar)  # Si no es 'estatus_text', ordenar por 'nombre' u otro campo
 
-class GrupoCreateView(CreateView):
+class GrupoCreateView(LoginRequiredMixin, CreateView):
     model = Grupo
     form_class = GrupoForm
     template_name = 'producto/grupo/grupo_form.html'
     success_url = reverse_lazy('grupos')
 
-class GrupoUpdateView(UpdateView):
+class GrupoUpdateView(LoginRequiredMixin, UpdateView):
     model = Grupo
     form_class = GrupoForm
     template_name = 'producto/grupo/grupo_form.html'
     success_url = reverse_lazy('grupos')
 
-class GrupoDeleteView(DeleteView):
+class GrupoDeleteView(LoginRequiredMixin, DeleteView):
     model = Grupo
     template_name = 'producto/grupo/grupo_confirm_delete.html'
     success_url = reverse_lazy('grupos')
 
-class InsumoListView(ListView):
+class InsumoListView(LoginRequiredMixin, ListView):
     model = Insumo
     template_name = "producto/insumo/insumo_list.html"
     context_object_name = "insumos"
@@ -102,24 +105,24 @@ class InsumoListView(ListView):
 
         return Insumo.objects.order_by(ordenar)  # Si no es 'estatus_text', ordenar por 'nombre' u otro campo
 
-class InsumoCreateView(CreateView):
+class InsumoCreateView(LoginRequiredMixin, CreateView):
     model = Insumo
     form_class = InsumoForm
     template_name = "producto/insumo/insumo_form.html"
     success_url = reverse_lazy("insumos")
 
-class InsumoUpdateView(UpdateView):
+class InsumoUpdateView(LoginRequiredMixin, UpdateView):
     model = Insumo
     form_class = InsumoForm
     template_name = "producto/insumo/insumo_form.html"
     success_url = reverse_lazy("insumos")
 
-class InsumoDeleteView(DeleteView):
+class InsumoDeleteView(LoginRequiredMixin, DeleteView):
     model = Insumo
     template_name = "producto/insumo/insumo_confirm_delete.html"
     success_url = reverse_lazy("insumos")
 
-class ProductoListView(ListView):
+class ProductoListView(LoginRequiredMixin, ListView):
     model = Producto
     template_name = 'producto/producto/producto_list.html'
     context_object_name = 'productos'
@@ -160,14 +163,14 @@ class ProductoListView(ListView):
         # Orden por nombre por defecto
         return Producto.objects.all().order_by(F('nombre'))
 
-class GuardarInsumosSesionView(View):
+class GuardarInsumosSesionView(LoginRequiredMixin, View):
     def post(self, request):
         data = json.loads(request.body)
         insumos_seleccionados = data.get('insumos', [])
         request.session['insumos_seleccionados'] = insumos_seleccionados
         return JsonResponse({'status': 'success', 'insumos': insumos_seleccionados})
 
-class ProductoCreateView(CreateView):
+class ProductoCreateView(LoginRequiredMixin, CreateView):
     model = Producto
     template_name = 'producto/producto/producto_form.html'
     form_class = ProductoForm
@@ -211,7 +214,7 @@ class ProductoCreateView(CreateView):
        
         return response
 
-class ProductoUpdateView(UpdateView):
+class ProductoUpdateView(LoginRequiredMixin, UpdateView):
     model = Producto
     template_name = 'producto/producto/producto_form.html'
     form_class = ProductoForm
@@ -276,12 +279,12 @@ class ProductoUpdateView(UpdateView):
        
         return response
 
-class ProductoDeleteView(DeleteView):
+class ProductoDeleteView(LoginRequiredMixin, DeleteView):
     model = Producto
     template_name = 'producto/producto/producto_confirm_delete.html'
     success_url = reverse_lazy('productos')
 
-class PaqueteListView(ListView):
+class PaqueteListView(LoginRequiredMixin, ListView):
     model = Paquete
     template_name = 'producto/paquete/paquete_list.html'
     context_object_name = 'paquetes'
@@ -322,14 +325,14 @@ class PaqueteListView(ListView):
         # Orden por nombre por defecto
         return Paquete.objects.all().order_by(F('nombre'))
 
-class GuardarProdutosSesionView(View):
+class GuardarProdutosSesionView(LoginRequiredMixin, View):
     def post(self, request):
         data = json.loads(request.body)
         productos_seleccionados = data.get('productos', [])
         request.session['productos_seleccionados'] = productos_seleccionados
         return JsonResponse({'status': 'success', 'productos': productos_seleccionados})
 
-class PaqueteCreateView(CreateView):
+class PaqueteCreateView(LoginRequiredMixin, CreateView):
     model = Paquete
     template_name = 'producto/paquete/paquete_form.html'
     form_class = PaqueteForm
@@ -372,7 +375,7 @@ class PaqueteCreateView(CreateView):
        
         return response
 
-class PaqueteUpdateView(UpdateView):
+class PaqueteUpdateView(LoginRequiredMixin, UpdateView):
     model = Paquete
     template_name = 'producto/paquete/paquete_form.html'
     form_class = PaqueteForm
@@ -435,7 +438,7 @@ class PaqueteUpdateView(UpdateView):
        
         return response
 
-class PaqueteDeleteView(DeleteView):
+class PaqueteDeleteView(LoginRequiredMixin, DeleteView):
     model = Paquete
     template_name = 'producto/paquete/paquete_confirm_delete.html'
     success_url = reverse_lazy('paquetes')

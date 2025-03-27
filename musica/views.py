@@ -1,3 +1,5 @@
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 import time
 import sys
 import spotipy
@@ -17,13 +19,12 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views import View
 from uuid import UUID
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 
 from pedido.models import DiaContable
 from .models import Cancion
 from .forms import CancionesForm
 
-class SolicitarMusicaView(View):
+class SolicitarMusicaView(LoginRequiredMixin, View):
     def get(self, request, token):
         try:
             token_uuid = token.hex  # Convierte el string en UUID
@@ -47,13 +48,13 @@ class SolicitarMusicaView(View):
 
         return render(request, 'musica/solicitar_musica.html', {'form': form, 'dia_contable': dia_contable})
     
-class Solicitar1MusicaView(View):
+class Solicitar1MusicaView(LoginRequiredMixin, View):
     def get(self, request):
         try:
             dia_contable = get_object_or_404(DiaContable, estatus=1)
             form = CancionesForm()
             canciones = Cancion.objects.filter(estatus='NO', dia_contable=dia_contable)
-            return render(request, 'musica/solicitar_musica.html', {'form': form, 'canciones': canciones})
+            return render(request, 'musica/solicitar1_musica.html', {'form': form, 'canciones': canciones})
         except ValueError:
             raise Http404("Token inválido")
 
@@ -68,7 +69,7 @@ class Solicitar1MusicaView(View):
             Registrada='Registrada'
             return redirect(f"{reverse('solicitar_musica', kwargs={'token': token})}?mensaje=Registrada")
 
-        return render(request, 'musica/solicitar_musica.html', {'form': form, 'dia_contable': dia_contable})
+        return render(request, 'musica/solicitar1_musica.html', {'form': form, 'dia_contable': dia_contable})
 
 client_id = settings.CLIENT_ID
 client_secret = settings.CLIENT_SECRET
@@ -84,6 +85,7 @@ sp_oauth = SpotifyOAuth(
 )
 #     cache_path='.spotify_cache'
 
+@login_required
 def spotify_callback(request):
     code = request.GET.get('code')
     if code:
@@ -94,6 +96,7 @@ def spotify_callback(request):
         pass
         return redirect(reverse_lazy("musica"))
 
+@login_required
 def cambiar_estatus_cancion(request, id):
     cancion = get_object_or_404(Cancion, id=id)
 
@@ -115,13 +118,7 @@ def cambiar_estatus_cancion(request, id):
 
         sp = spotipy.Spotify(auth=token)
 
-        # playlist_id = 'https://open.spotify.com/playlist/729CSyaetSSlBtxbh2dBOp?si=cb02a7b340754c45'
-
-#        playlist_id = 'https://open.spotify.com/playlist/1kqvA32aSXZkgag8AbG1w4?si=hwMKjrdkRmG38LUG31XL0Q&pi=SXUuSX4uSDiJZ'
-#        playlist_id = 'https://open.spotify.com/playlist/1kqvA32aSXZkgag8AbG1w4?si=jPsctQQ_TmGyi-66aWfvhg&pi=7Fsk_L2vTFeCc'
-        playlist_id = 'https://open.spotify.com/playlist/1kqvA32aSXZkgag8AbG1w4?si=-Knb2NNqSYK-RBUJroIl4A&pi=0ELbLGL0See5z'
-#                      https://open.spotify.com/playlist/1kqvA32aSXZkgag8AbG1w4?si=-Knb2NNqSYK-RBUJroIl4A&pi=0ELbLGL0See5z
- 
+        playlist_id = settings.PLAYLIST_ID
         
         try:
             # ✅ Pasar directamente el valor de la URI
@@ -151,6 +148,7 @@ def cambiar_estatus_cancion(request, id):
 
         return render(request, 'musica/lista_canciones.html', {'canciones': canciones})
 
+@login_required
 def ponEnLista(request, uri, artistas, nombre, album):
 
     dia_contable = DiaContable.objects.filter(estatus=1).first()
@@ -165,6 +163,7 @@ def ponEnLista(request, uri, artistas, nombre, album):
 
     return JsonResponse({'respuesta': "OK"})
 
+@login_required
 def listaCancionesTodas(request, autor, cancion):
 
     sp = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials(client_id, client_secret))
@@ -190,6 +189,7 @@ def listaCancionesTodas(request, autor, cancion):
 
     return JsonResponse({'canciones': canciones, 'encontro': encontro,})
 
+@login_required
 def listaCancionesAutor(request, autor):
 
     sp = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials(client_id, client_secret))
@@ -208,6 +208,7 @@ def listaCancionesAutor(request, autor):
 
     return JsonResponse({'canciones': canciones, 'encontro': encontro,})
 
+@login_required
 def listaCanciones(request, cancion):
 
     sp = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials(client_id, client_secret))
@@ -226,7 +227,7 @@ def listaCanciones(request, cancion):
 
     return JsonResponse({'canciones': canciones, 'encontro': encontro,})
 
-class PresentaQRView(LoginRequiredMixin,View):
+class PresentaQRView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         # Obtener el curso por pk
         dia_contable = get_object_or_404(DiaContable, estatus=1)
@@ -337,7 +338,7 @@ class PresentaQRView(LoginRequiredMixin,View):
             'qr_url': img_url
         })
 
-class ListaCancionesView(ListView):
+class ListaCancionesView(LoginRequiredMixin, ListView):
     model = Cancion
     template_name = 'musica/lista_canciones.html'
     context_object_name = 'canciones'
