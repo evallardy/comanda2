@@ -34,11 +34,11 @@
             <tr>
                 <td>{{ pago.comanda__mesa }}</td>
                 <td>{{ pago.comanda__observacion }}</td>
-                <td class="text-end">{{ pago.caja_grupo__importe_efectivo|default:0 }}</td>
-                <td class="text-end">{{ pago.caja_grupo__importe_tarjeta|default:0 }}</td>
-                <td class="text-end">{{ pago.caja_grupo__importe_transferencia|default:0 }}</td>
-                <td class="text-end">{{ pago.caja_grupo__importe_comision|default:0 }}</td>
-                <td class="text-end">{{ pago.caja_grupo__importe_descuento|default:0 }}</td>
+                <td class="text-end">{{ pago.caja_grupo__importe_efectivo|default:'0.00' }}</td>
+                <td class="text-end">{{ pago.caja_grupo__importe_tarjeta|default:'0.00' }}</td>
+                <td class="text-end">{{ pago.caja_grupo__importe_transferencia|default:'0.00' }}</td>
+                <td class="text-end">{{ pago.caja_grupo__importe_comision|default:'0.00' }}</td>
+                <td class="text-end">{{ pago.caja_grupo__importe_descuento|default:'0.00' }}</td>
             </tr>
             {% endfor %}
         </tbody>
@@ -47,28 +47,28 @@
         <tbody>
             <tr>
                 <td>Total Efectivo:</td>
-                <td class="text-end">${{ total_efectivo }}</td>
+                <td class="text-end">{{ total_efectivo|default:'0.00' }}</td>
                 <td></td>
                 <td>Total Comisión:</td>
-                <td class="text-end">${{ total_comision }}</td>
+                <td class="text-end">{{ total_comision|default:'0.00' }}</td>
             </tr>
             <tr>
                 <td>Total Tarjeta:</td>
-                <td class="text-end">${{ total_tarjeta }}</td>
+                <td class="text-end">{{ total_tarjeta|default:'0.00' }}</td>
                 <td></td>
                 <td>Total Descuento:</td>
-                <td class="text-end">${{ total_descuento }}</td>
+                <td class="text-end">{{ total_descuento|default:'0.00' }}</td>
             </tr>
             <tr>
                 <td>Total Transferencia:</td>
-                <td class="text-end">${{ total_transferencia }}</td>
+                <td class="text-end">{{ total_transferencia|default:'0.00' }}</td>
                 <td></td>
                 <td>Total General:</td>
-                <td class="text-end">${{ total_global }}</td>
+                <td class="text-end">{{ total_global|default:'0.00' }}</td>
             </tr>
             <tr>
                 <td>Total Total:</td>
-                <td class="text-end">${{ total_importe }}</td>
+                <td class="text-end">{{ total_importe|default:'0.00' }}</td>
                 <td></td>
                 <td></td>
                 <td></td>
