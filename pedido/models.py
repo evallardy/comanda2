@@ -65,6 +65,7 @@ class Comanda(models.Model):
         verbose_name = 'Comanda'
         verbose_name_plural = 'Comandas'
         ordering = ['-dia_contable', '-fecha_alta',]
+        unique_together = ('mesa', 'observacion', 'dia_contable')
         db_table = 'Comanda'
 
     def __str__(self):
@@ -112,6 +113,7 @@ class Pago(models.Model, PermissionRequiredMixin):
     importe_tarjeta = models.DecimalField("Tarjeta", max_digits=10, decimal_places=2, default=0)
     importe_transferencia = models.DecimalField("Transferencia", max_digits=10, decimal_places=2, default=0)
     importe_descuento = models.DecimalField("Descuento", max_digits=10, decimal_places=2, default=0)
+    importe_comision = models.DecimalField("Comisión", max_digits=10, decimal_places=2, default=0)
     usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name="UsuarioPago", null=True, blank=True)
     estatus = models.IntegerField("Estatus", choices=ACTIVO_PAGO, default=1)
     fecha_modificacion = models.DateTimeField("Fecha modificación", auto_now=True)
@@ -124,7 +126,7 @@ class Pago(models.Model, PermissionRequiredMixin):
         db_table = 'Pago'
 
     def __str__(self):
-        return ' %s, %s, %s, %s' % (self.fecha_modificacion, dict(ACTIVO_PAGO).get(self.estatus))
+        return ' %s, %s' % (self.fecha_modificacion, dict(ACTIVO_PAGO).get(self.estatus))
 
 class Detalle(models.Model, PermissionRequiredMixin):
     caja = models.ForeignKey(Caja, on_delete=models.CASCADE, verbose_name="Caja")

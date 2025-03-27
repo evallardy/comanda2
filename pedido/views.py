@@ -2,6 +2,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 import json
 import re
+from django.db.models import Sum
 from django.http.response import HttpResponse, HttpResponseRedirect
 from django.db import transaction
 from django.http import JsonResponse
@@ -441,6 +442,7 @@ def guardar_pago(request):
         importe_efectivo = request.POST.get('importe_efectivo')
         importe_tarjeta = request.POST.get('importe_tarjeta')
         importe_transferencia = request.POST.get('importe_transferencia')
+        importe_comision = request.POST.get('importe_comision')
         importe_descuento = request.POST.get('importe_descuento')
         pagos_seleccionados = request.POST.get("pagos_seleccionados", "[]") 
 
@@ -450,6 +452,7 @@ def guardar_pago(request):
                 importe_efectivo=importe_efectivo,
                 importe_tarjeta=importe_tarjeta,
                 importe_transferencia=importe_transferencia,
+                importe_comision=importe_comision,
                 importe_descuento=importe_descuento,
             )
             
@@ -574,3 +577,50 @@ class CierreView(LoginRequiredMixin, View):
             nuevo_dia = DiaContable.objects.create()
 
         return redirect('index')
+    
+class CajaReporteView(LoginRequiredMixin, ListView):
+    model = Pago
+    template_name = 'pedido/caja_reporte.html'
+    context_object_name = 'pagos'
+
+    def get_queryset(self):
+        dia_contable_id = self.request.GET.get('dia_contable')
+        if not dia_contable_id:
+            dia_contable = DiaContable.objects.filter(estatus=1).first()
+            dia_contable_id = dia_contable.id
+        queryset = Caja.objects.filter(comanda__dia_contable__id=dia_contable_id).values(
+            'comanda__mesa',
+            'comanda__observacion',
+            'caja_grupo__id',
+            'caja_grupo__importe_efectivo',
+            'caja_grupo__importe_tarjeta',
+            'caja_grupo__importe_transferencia',
+            'caja_grupo__importe_comision',
+            'caja_grupo__importe_descuento',
+            ).distinct().order_by('comanda')
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        dia_contable_id = self.request.GET.get('dia_contable')
+        if not dia_contable_id:
+            dia_contable = DiaContable.objects.filter(estatus=1).first()
+            dia_contable_id = dia_contable.id
+        cajas = self.get_queryset()
+        total_efectivo = cajas.aggregate(total=Sum('caja_grupo__importe_efectivo'))['total'] or 0
+        total_tarjeta = cajas.aggregate(total=Sum('caja_grupo__importe_tarjeta'))['total'] or 0
+        total_transferencia = cajas.aggregate(total=Sum('caja_grupo__importe_transferencia'))['total'] or 0
+        total_comision = cajas.aggregate(total=Sum('caja_grupo__importe_comision'))['total'] or 0
+        total_descuento = cajas.aggregate(total=Sum('caja_grupo__importe_descuento'))['total'] or 0
+        total_importe = total_efectivo + total_tarjeta + total_transferencia
+        total_global = total_comision + total_importe - total_descuento
+        context['total_efectivo'] = total_efectivo
+        context['total_tarjeta'] = total_tarjeta
+        context['total_transferencia'] = total_transferencia
+        context['total_comision'] = total_comision
+        context['total_descuento'] = total_descuento
+        context['total_importe'] = total_importe
+        context['total_global'] = total_global
+        context['dias_contables'] = DiaContable.objects.all()
+        context['dia_contable_seleccionado'] = str(dia_contable_id)
+        return context    

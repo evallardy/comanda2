@@ -1,0 +1,82 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Reporte de Caja</h2>
+
+    <form method="GET" class="mb-3">
+        <div class="mb-3">
+            <label for="comandaSelect" class="form-label">Días contables:</label>
+            <select id="comandaSelect" name="dia_contable" class="form-select" onchange="this.form.submit()">
+                <option value="">-- Seleccione día --</option>
+                {% for dia in dias_contables %}
+                    <option value="{{ dia.id }}" {% if dia.id|stringformat:"s" == dia_contable_seleccionado %}selected{% endif %}>
+                        Día {{ dia.id }} - {{ dia.fecha_alta }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+    </form>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Mesa</th>
+                <th>Observ.</th>
+                <th class="text-end">Efectivo</th>
+                <th class="text-end">Tarejta</th>
+                <th class="text-end">Transf.</th>
+                <th class="text-end">Comisión</th>
+                <th class="text-end">Descuento</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for pago in pagos %}
+            <tr>
+                <td>{{ pago.comanda__mesa }}</td>
+                <td>{{ pago.comanda__observacion }}</td>
+                <td class="text-end">{{ pago.caja_grupo__importe_efectivo }}</td>
+                <td class="text-end">{{ pago.caja_grupo__importe_tarjeta }}</td>
+                <td class="text-end">{{ pago.caja_grupo__importe_transferencia }}</td>
+                <td class="text-end">{{ pago.caja_grupo__importe_comision }}</td>
+                <td class="text-end">{{ pago.caja_grupo__importe_descuento }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <table class="table table-borderless">
+        <tbody>
+            <tr>
+                <td>Total Efectivo:</td>
+                <td class="text-end">${{ total_efectivo }}</td>
+                <td>Total Comisión:</td>
+                <td class="text-end">${{ total_comision }}</td>
+            </tr>
+            <tr>
+                <td>Total Tarjeta:</td>
+                <td class="text-end">${{ total_tarjeta }}</td>
+                <td>Total Descuento:</td>
+                <td class="text-end">${{ total_descuento }}</td>
+            </tr>
+            <tr>
+                <td>Total Transferencia:</td>
+                <td class="text-end">${{ total_transferencia }}</td>
+                <td>Total General:</td>
+                <td class="text-end">${{ total_global }}</td>
+            </tr>
+            <tr>
+                <td>Total Total:</td>
+                <td class="text-end">${{ total_importe }}</td>
+                <td></td>
+                <td></td>
+            </tr>
+        </tbody>
+
+    </table>
+    
+    
+    
+    
+    
+    
+</div>
+{% endblock %}

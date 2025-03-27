@@ -31,6 +31,8 @@ class Usuario(AbstractUser):
             ('cerrar', 'Día cierra'), 
             ('usuarios', 'Consulta usuarios'),
             ('caja', 'Pago de comandas'),
+            ('global', 'Reporte global diario'),
+            ('complace', 'Poner canciones a clientes'),
             ('presenta', 'Muestra QR para música'),
             ('musica', 'Lista de complacencias'),
         )

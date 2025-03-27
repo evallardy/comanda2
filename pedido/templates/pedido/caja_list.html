@@ -94,6 +94,10 @@
                         <input type="number" class="form-control" id="transferencia" placeholder="Transferencia">
                     </div>
                     <div class="mb-3">
+                        <label for="comision" class="form-label">Comisión</label>
+                        <input type="number" class="form-control" id="comision" placeholder="Comisión">
+                    </div>
+                    <div class="mb-3">
                         <label for="descuento" class="form-label">Descuento</label>
                         <input type="number" class="form-control" id="descuento" placeholder="Descuento">
                     </div>
@@ -110,6 +114,7 @@
         <input type="hidden" id="importeEfectivo" name="importe_efectivo">
         <input type="hidden" id="importeTarjeta" name="importe_tarjeta">
         <input type="hidden" id="importeTransferencia" name="importe_transferencia">
+        <input type="hidden" id="importeComision" name="importe_comision">
         <input type="hidden" id="importeDescuento" name="importe_descuento">
         <input type="hidden" id="pagosSeleccionados" name="pagos_seleccionados">
     </form>
@@ -125,6 +130,7 @@
             document.getElementById("importeEfectivo").value = document.getElementById("efectivo").value || 0;
             document.getElementById("importeTarjeta").value = document.getElementById("tarjeta").value || 0;
             document.getElementById("importeTransferencia").value = document.getElementById("transferencia").value || 0;
+            document.getElementById("importeComision").value = document.getElementById("comision").value || 0;
             document.getElementById("importeDescuento").value = document.getElementById("descuento").value || 0;
 
             let seleccionados = [];
@@ -146,6 +152,7 @@
             const efectivoInput = document.getElementById("efectivo");
             const tarjetaInput = document.getElementById("tarjeta");
             const transferenciaInput = document.getElementById("transferencia");
+            const comisionInput = document.getElementById("comision");
             const descuentoInput = document.getElementById("descuento");
             const guardarPagoBtn = document.getElementById("guardarPagoBtn");
 
@@ -158,6 +165,7 @@
                 efectivoInput.value = '';
                 tarjetaInput.value = '';
                 transferenciaInput.value = '';
+                comisionInput.value = '';
                 descuentoInput.value = '';
                 // Deshabilitar el botón al abrir el modal
                 guardarPagoBtn.disabled = true;
@@ -168,11 +176,12 @@
                 const efectivo = parseFloat(efectivoInput.value) || 0;
                 const tarjeta = parseFloat(tarjetaInput.value) || 0;
                 const transferencia = parseFloat(transferenciaInput.value) || 0;
+                const comision = parseFloat(comisionInput.value) || 0;
                 const descuento = parseFloat(descuentoInput.value) || 0;
 
                 const total = parseFloat(totalSpan.textContent.replace(/,/g, '')); // Convertir total sin comas
 
-                const suma = efectivo + tarjeta + transferencia + descuento;
+                const suma = efectivo + tarjeta + transferencia + comision - descuento;
                 
                 // Si la suma es igual al total, habilitar el botón
                 if ((suma === total) && (suma > 0)) {
@@ -186,6 +195,7 @@
             efectivoInput.addEventListener("input", validarSuma);
             tarjetaInput.addEventListener("input", validarSuma);
             transferenciaInput.addEventListener("input", validarSuma);
+            comisionInput.addEventListener("input", validarSuma);
             descuentoInput.addEventListener("input", validarSuma);
         });
 

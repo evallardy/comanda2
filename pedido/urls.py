@@ -21,6 +21,8 @@ urlpatterns = [
     path('caja/', CajaListView.as_view(), name='caja'),
     path('caja/pagar/', pagar_caja, name='pagar_caja'),
     path('guardar_pago/', guardar_pago, name='guardar_pago'),
+    path('caja/global/', CajaReporteView.as_view(), name='global'),
+
     path('comandas/', ComandasView.as_view(), name='comandas'),
 
     path('cierre/', CierreView.as_view(), name='cierre'),

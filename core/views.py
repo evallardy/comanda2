@@ -20,7 +20,7 @@ def index(request):
         activo = False
 
     opciones_menus = ['Comanda', 'Bar',  'Cocina', 'Caja', 'Entregas', 'Consulta', 'Comandas', 'Servicios', 'Catálogo', 
-        'Usuarios', 'Accesos', 'Cierre', 'Complace','Presenta', 'Musica']  # Lista en lugar de set
+        'Usuarios', 'Accesos', 'Cierre', 'Global', 'Complace', 'Presenta', 'Musica']  # Lista en lugar de set
 
     # Crear la estructura JSON correcta
     menus_json = [{"opcion": p,
@@ -42,6 +42,8 @@ def index(request):
     context['cierre_perm'] = request.user.has_perm('usuario.cerrar')
     context['abre_perm'] = request.user.has_perm('usuario.abrir')
     
+    context['global_perm'] = request.user.has_perm('usuario.global')
+    context['complace_perm'] = request.user.has_perm('usuario.complace')
     context['presenta_perm'] = request.user.has_perm('usuario.presenta')
     context['musica_perm'] = request.user.has_perm('usuario.musica')
     
