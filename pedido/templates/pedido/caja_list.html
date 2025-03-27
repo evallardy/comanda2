@@ -1,5 +1,6 @@
 {% extends "core/base.html" %}
 {% load static %}
+{% load humanize %}
 {% load form_filters %}
 {% block content %}
 {% load static %}
@@ -49,8 +50,8 @@
                             <td>{{ caja.comanda }}
                             </td>
                             <td>{{ caja.descripcion }}</td>
-                            <td class="text-end">{{ caja.cantidad }}</td>
-                            <td class="text-end">${{ caja.importe }}</td>
+                            <td class="text-end">{{ caja.cantidad|intcomma }}</td>
+                            <td class="text-end">{{ caja.importe|intcomma }}</td>
                             <td>
                                 
                                 {% if caja_estatus|get_item:caja.id == 'Completado' %}
@@ -76,33 +77,51 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="modalPagoLabel">Pago Seleccionado</h5>
+                    <h5 class="modal-title" id="modalPagoLabel">Pago</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <h5>Total a Pagar: <span id="totalPagoModal">0.00</span></h5>
+                    <div class="col-12 row" style="color: blue; font-weight: bold;">
+                        <div class="col-6">
+                            <h5>Total a Pagar: <span id="totalPagoModal">0.00</span></h5>
+                        </div>
+                        <div class="col-6">
+                            <h5>Total Pagado: <span id="totalPagadoModal">0.00</span></h5>
+                        </div>
+                    </div>
+                    <hr>
                     <div class="mb-3">
                         <label for="efectivo" class="form-label">Efectivo</label>
-                        <input type="number" class="form-control" id="efectivo" placeholder="Efectivo">
+                        <input type="number" class="form-control text-end" id="efectivo" placeholder="Efectivo">
                     </div>
-                    <div class="mb-3">
-                        <label for="tarjeta" class="form-label">Tarjeta</label>
-                        <input type="number" class="form-control" id="tarjeta" placeholder="Tarjeta">
+                    <div class="mb-3 col-12 row">
+                        <div class="col-5">
+                            <label for="tarjeta" class="form-label">Tarjeta</label>
+                            <input type="number" class="form-control text-end" id="tarjeta" placeholder="Tarjeta">
+                        </div>
+                        <div class="col-5">
+                            <label for="comisionCalculada" class="form-label">Comisión calculada</label>
+                            <input type="number" class="form-control text-end" id="comisionCalculada" readonly>
+                        </div>
+                        <div class="col-2">
+                            <label for="porcentaje" class="form-label">Porcentaje</label>
+                            <input type="number" class="form-control text-end" id="porcentaje" value="6">
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label for="transferencia" class="form-label">Transferencia</label>
-                        <input type="number" class="form-control" id="transferencia" placeholder="Transferencia">
+                        <input type="number" class="form-control text-end" id="transferencia" placeholder="Transferencia">
                     </div>
                     <div class="mb-3">
                         <label for="comision" class="form-label">Comisión</label>
-                        <input type="number" class="form-control" id="comision" placeholder="Comisión">
+                        <input type="number" class="form-control text-end" id="comision" placeholder="Comisión">
                     </div>
                     <div class="mb-3">
                         <label for="descuento" class="form-label">Descuento</label>
-                        <input type="number" class="form-control" id="descuento" placeholder="Descuento">
+                        <input type="number" class="form-control text-end" id="descuento" placeholder="Descuento">
                     </div>
                     <div class="text-end">
-                        <button type="button" class="btn btn-primary" id="guardarPagoBtn" disabled>Guardar Pago</button>
+                        <button type="button" class="btn btn-primary" id="guardarPagoBtn">Guardar Pago</button>
                     </div>
                 </div>
             </div>
@@ -149,8 +168,11 @@
         document.addEventListener("DOMContentLoaded", function () {
             const totalSpan = document.getElementById("totalSeleccionado");
             const totalPagoModal = document.getElementById("totalPagoModal");
+            const totalPagadoModal = document.getElementById("totalPagadoModal");
             const efectivoInput = document.getElementById("efectivo");
             const tarjetaInput = document.getElementById("tarjeta");
+            const comisionCalculadaInput = document.getElementById("comisionCalculada");
+            const porcentajeInput = document.getElementById("porcentaje");
             const transferenciaInput = document.getElementById("transferencia");
             const comisionInput = document.getElementById("comision");
             const descuentoInput = document.getElementById("descuento");
@@ -164,17 +186,21 @@
                 // Limpiar campos
                 efectivoInput.value = '';
                 tarjetaInput.value = '';
+                comisionCalculadaInput.value = '';
+                porcentajeInput.value = '6';
                 transferenciaInput.value = '';
                 comisionInput.value = '';
                 descuentoInput.value = '';
                 // Deshabilitar el botón al abrir el modal
-                guardarPagoBtn.disabled = true;
+//                guardarPagoBtn.disabled = true;
             });
 
             // Función para validar la suma
             function validarSuma() {
                 const efectivo = parseFloat(efectivoInput.value) || 0;
                 const tarjeta = parseFloat(tarjetaInput.value) || 0;
+                const comisionCalculada = parseFloat(comisionCalculadaInput.value) || 0;
+                const porcentaje = parseFloat(porcentajeInput.value) || 0;
                 const transferencia = parseFloat(transferenciaInput.value) || 0;
                 const comision = parseFloat(comisionInput.value) || 0;
                 const descuento = parseFloat(descuentoInput.value) || 0;
@@ -182,13 +208,23 @@
                 const total = parseFloat(totalSpan.textContent.replace(/,/g, '')); // Convertir total sin comas
 
                 const suma = efectivo + tarjeta + transferencia + comision - descuento;
+
+                totalPagadoModal.textContent = suma.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+                if ( tarjeta > 0 && porcentaje >= 1) {
+                    const porcentajeObtenido = porcentaje.toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) / 100;
+                    const comisionX = tarjeta * porcentajeObtenido;
+                    comisionCalculadaInput.value = comisionX.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                } else {
+                    comisionCalculadaInput.value = '0.00';
+                }
                 
                 // Si la suma es igual al total, habilitar el botón
-                if ((suma === total) && (suma > 0)) {
-                    guardarPagoBtn.disabled = false;
-                } else {
-                    guardarPagoBtn.disabled = true;
-                }
+//                if ((suma === total) && (suma > 0)) {
+//                    guardarPagoBtn.disabled = false;
+//                } else {
+//                    guardarPagoBtn.disabled = true;
+//                }
             }
 
             // Evento para validar cuando cambian los valores de los inputs
@@ -196,6 +232,7 @@
             tarjetaInput.addEventListener("input", validarSuma);
             transferenciaInput.addEventListener("input", validarSuma);
             comisionInput.addEventListener("input", validarSuma);
+            porcentajeInput.addEventListener("input", validarSuma);
             descuentoInput.addEventListener("input", validarSuma);
         });
 
@@ -209,7 +246,8 @@
                 let total = 0;
                 checkboxes.forEach(checkbox => {
                     if (checkbox.checked) {
-                        total += parseFloat(checkbox.getAttribute("data-importe"));
+                        dato = parseFloat(checkbox.getAttribute("data-importe").replace(/,/g, ''));
+                        total += dato;
                     }
                 });
                 totalSpan.textContent = total.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
