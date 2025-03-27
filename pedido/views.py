@@ -2,6 +2,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 import json
 import re
+from django.db.models.functions import Coalesce
 from django.db.models import Sum
 from django.http.response import HttpResponse, HttpResponseRedirect
 from django.db import transaction
@@ -14,7 +15,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import redirect
 from django.core.exceptions import ValidationError
 from django.urls import reverse_lazy
-from django.db.models import Q
+from django.db.models import Q, F, Value, DecimalField
 
 from producto.models import Producto, Paquete, PaqueteProducto, ProductoInsumo
 from .models import DiaContable, Caja, Detalle, Comanda, Servicio, Pago
@@ -588,7 +589,39 @@ class CajaReporteView(LoginRequiredMixin, ListView):
         if not dia_contable_id:
             dia_contable = DiaContable.objects.filter(estatus=1).first()
             dia_contable_id = dia_contable.id
+#        queryset = Caja.objects.filter(comanda__dia_contable__id=dia_contable_id).values(
+#            'comanda__mesa',
+#            'comanda__observacion',
+#            'caja_grupo__id',
+#            'caja_grupo__importe_efectivo',
+#            'caja_grupo__importe_tarjeta',
+#            'caja_grupo__importe_transferencia',
+#            'caja_grupo__importe_comision',
+#            'caja_grupo__importe_descuento',
+#            ).distinct().order_by('comanda')
         queryset = Caja.objects.filter(comanda__dia_contable__id=dia_contable_id).values(
+            'comanda__mesa',
+            'comanda__observacion',
+            'caja_grupo__id',
+            'caja_grupo__importe_efectivo',
+            'caja_grupo__importe_tarjeta',
+            'caja_grupo__importe_transferencia',
+            'caja_grupo__importe_comision',
+            'caja_grupo__importe_descuento'
+        ).annotate(
+            total_importe=Coalesce(F("caja_grupo__importe_efectivo"), Value(0, output_field=DecimalField())) +
+                        Coalesce(F("caja_grupo__importe_tarjeta"), Value(0, output_field=DecimalField())) +
+                        Coalesce(F("caja_grupo__importe_transferencia"), Value(0, output_field=DecimalField()))
+        ).distinct().order_by('comanda__mesa')
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        dia_contable_id = self.request.GET.get('dia_contable')
+        if not dia_contable_id:
+            dia_contable = DiaContable.objects.filter(estatus=1).first()
+            dia_contable_id = dia_contable.id
+        cajas = Caja.objects.filter(comanda__dia_contable__id=dia_contable_id).values(
             'comanda__mesa',
             'comanda__observacion',
             'caja_grupo__id',
@@ -598,15 +631,6 @@ class CajaReporteView(LoginRequiredMixin, ListView):
             'caja_grupo__importe_comision',
             'caja_grupo__importe_descuento',
             ).distinct().order_by('comanda')
-        return queryset
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        dia_contable_id = self.request.GET.get('dia_contable')
-        if not dia_contable_id:
-            dia_contable = DiaContable.objects.filter(estatus=1).first()
-            dia_contable_id = dia_contable.id
-        cajas = self.get_queryset()
         total_efectivo = cajas.aggregate(total=Sum('caja_grupo__importe_efectivo'))['total'] or 0
         total_tarjeta = cajas.aggregate(total=Sum('caja_grupo__importe_tarjeta'))['total'] or 0
         total_transferencia = cajas.aggregate(total=Sum('caja_grupo__importe_transferencia'))['total'] or 0

@@ -31,6 +31,7 @@
         </thead>
         <tbody>
             {% for pago in pagos %}
+            {% if pago.total_importe > 0 %}
             <tr>
                 <td>{{ pago.comanda__mesa }}</td>
                 <td>{{ pago.comanda__observacion }}</td>
@@ -40,6 +41,7 @@
                 <td class="text-end">{{ pago.caja_grupo__importe_comision|default:'0.00' }}</td>
                 <td class="text-end">{{ pago.caja_grupo__importe_descuento|default:'0.00' }}</td>
             </tr>
+            {% endif %}
             {% endfor %}
         </tbody>
     </table>
