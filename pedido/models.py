@@ -108,9 +108,10 @@ class Caja(models.Model, PermissionRequiredMixin):
         return ' %s, %s, %s, %s' % (self.comanda, self.descripcion, self.importe, dict(ACTIVO_CAJA).get(self.estatus))
 
 class Pago(models.Model, PermissionRequiredMixin):
-    importe_efectivo = models.DecimalField("Importe", max_digits=10, decimal_places=2, default=0)
-    importe_tarjeta = models.DecimalField("Importe", max_digits=10, decimal_places=2, default=0)
-    importe_transferencia = models.DecimalField("Importe", max_digits=10, decimal_places=2, default=0)
+    importe_efectivo = models.DecimalField("Efectivo", max_digits=10, decimal_places=2, default=0)
+    importe_tarjeta = models.DecimalField("Tarjeta", max_digits=10, decimal_places=2, default=0)
+    importe_transferencia = models.DecimalField("Transferencia", max_digits=10, decimal_places=2, default=0)
+    importe_descuento = models.DecimalField("Descuento", max_digits=10, decimal_places=2, default=0)
     usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name="UsuarioPago", null=True, blank=True)
     estatus = models.IntegerField("Estatus", choices=ACTIVO_PAGO, default=1)
     fecha_modificacion = models.DateTimeField("Fecha modificación", auto_now=True)

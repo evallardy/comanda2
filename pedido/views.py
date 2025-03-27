@@ -17,6 +17,7 @@ from django.db.models import Q
 
 from producto.models import Producto, Paquete, PaqueteProducto, ProductoInsumo
 from .models import DiaContable, Caja, Detalle, Comanda, Servicio, Pago
+from musica.models import Cancion
 
 # Create your views here.
 
@@ -440,6 +441,7 @@ def guardar_pago(request):
         importe_efectivo = request.POST.get('importe_efectivo')
         importe_tarjeta = request.POST.get('importe_tarjeta')
         importe_transferencia = request.POST.get('importe_transferencia')
+        importe_descuento = request.POST.get('importe_descuento')
         pagos_seleccionados = request.POST.get("pagos_seleccionados", "[]") 
 
         # Crear el registro de pago
@@ -448,6 +450,7 @@ def guardar_pago(request):
                 importe_efectivo=importe_efectivo,
                 importe_tarjeta=importe_tarjeta,
                 importe_transferencia=importe_transferencia,
+                importe_descuento=importe_descuento,
             )
             
             try:
@@ -557,7 +560,16 @@ class CierreView(LoginRequiredMixin, View):
     def post(self, request):
 
         if DiaContable.objects.filter(estatus=1).first():
-            diaContable = DiaContable.objects.filter(estatus=1).update(estatus=0)
+            dias_contables = DiaContable.objects.filter(estatus=1)
+
+            if dias_contables:
+                ids_dias_contables = list(dias_contables.values_list('id', flat=True))
+
+                for dia in dias_contables:
+                    dia.estatus = 0
+                    dia.save()
+
+                canciones_eliminadas = Cancion.objects.filter(dia_contable__in=ids_dias_contables).delete()
         else:
             nuevo_dia = DiaContable.objects.create()
 

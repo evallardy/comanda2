@@ -49,6 +49,7 @@
         url: '/usuario/todos_permisos/' + id + '/',
         type: 'GET',
         dataType: 'json',
+        headers: { "X-CSRFToken": "{{ csrf_token }}" },
         success: function (data) {
           // Obtener los permisos del usuario del objeto de datos recibido
           var userPermissions = data.usuario_permisos;

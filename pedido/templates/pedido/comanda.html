@@ -257,8 +257,8 @@
             type: "POST",
             data: JSON.stringify({ 
                 productos: productos, 
-                csrfmiddlewaretoken: $("input[name=csrfmiddlewaretoken]").val(),
             }),
+            headers: { "X-CSRFToken": "{{ csrf_token }}" },
             contentType: "application/json",
             success: function(response) {
                 alert("Datos guardados correctamente");
@@ -289,6 +289,7 @@
                     url: "/pedido/api/comandas/",  // URL de Django
                     type: "GET",
                     dataType: "json",
+                    headers: { "X-CSRFToken": "{{ csrf_token }}" },
                     success: function(data) {
                         let select = $("#id_combo_mesa");
                         select.empty();
@@ -346,8 +347,8 @@
                 "cantidad": cantidad,
                 "precio": precio,
                 "area": area,
-                "csrfmiddlewaretoken": "{{ csrf_token }}"  // CSRF para evitar ataques
             },
+            headers: { "X-CSRFToken": "{{ csrf_token }}" },
             success: function (response) {
 
                 agregarProductoATabla(tipo, producto_id, nombre_producto, cantidad, response.adicionales, response.precio, response.area);
@@ -878,6 +879,7 @@
             url: '/pedido/pedido/productos_paquete/' + paquete_id + '/',  
             type: "GET",
             dataType: "json",
+            headers: { "X-CSRFToken": "{{ csrf_token }}" },
             success: function (data) {
                 let tabla = $("#tablaProductos");
                 tabla.empty();  // Limpiar la tabla antes de agregar nuevos datos
