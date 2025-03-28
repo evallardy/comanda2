@@ -1,9 +1,23 @@
 {% extends 'core/base.html' %}
 
 {% block content %}
+<style>
+    .celdas {
+        background-color: rgba(214, 214, 214, 0.884);
+    }
+    .totales {
+        font-weight: bold;
+        border-bottom: 1 solid gray;
+        color: rgb(0, 38, 255);
+        border-bottom: 1px gray solid;
+        background-color: aqua;
+        text-decoration: underline double;
+    }
+</style>
 <div class="container mt-4">
-    <h2>Reporte de Caja</h2>
-
+    <div class="text-center">
+        <h2>Reporte de Caja</h2>
+    </div>
     <form method="GET" class="mb-3">
         <div class="mb-3">
             <label for="comandaSelect" class="form-label">Días contables:</label>
@@ -17,6 +31,50 @@
             </select>
         </div>
     </form>
+    <hr>
+    <div class="container">
+        <div class="row" >
+            <div class="celdas col-3" style="border-top-left-radius: 10px;">Efectivo:</div>
+            <div class="text-end celdas col-2" style="border-top-right-radius: 10px;">{{ total_efectivo|default:'0.00' }}</div>
+            <div class="col-2"></div>
+            <div class="celdas col-3" style="border-top-left-radius: 10px;">Comisión:</div>
+            <div class="text-end celdas col-2" style="border-top-right-radius: 10px;">{{ total_comision|default:'0.00' }}</div>
+        </div>
+        <div class="row">
+            <div class="celdas col-3">Tarjeta:</div>
+            <div class="text-end celdas col-2">{{ total_tarjeta|default:'0.00' }}</div>
+            <div class="col-2"></div>
+            <div class="celdas col-3">Descuento:</div>
+            <div class="text-end celdas col-2">{{ total_descuento|default:'0.00' }}</div>
+        </div>
+        <div class="row">
+            <div class="celdas col-3">Transferencia:</div>
+            <div class="text-end celdas col-2">{{ total_transferencia|default:'0.00' }}</div>
+            <div class="col-2"></div>
+            <div class="totales col-3" style="border-bottom-left-radius: 10px;">Gran total:</div>
+            <div class="text-end totales col-2" style="border-bottom-right-radius: 10px;">{{ total_global|default:'0.00' }}</div>
+        </div>
+        <div class="row">
+            <div class="totales col-3" style="border-bottom-left-radius: 10px;">Subtotal:</div>
+            <div class="text-end totales col-2" style="border-bottom-right-radius: 10px;">{{ total_importe|default:'0.00' }}</div>
+            <div class="col-2"></div>
+            <div class=" col-3"></div>
+            <div class=" col-2"></div>
+        </div>
+    </div>
+    <table class="table table-borderless mt-4 col-12">
+        <tbody>
+            <tr>
+            </tr>
+            <tr style="background-color: transparent;">
+            </tr>
+            <tr style="background-color: transparent;">
+            </tr>
+            <tr style="background-color: transparent;">
+            </tr>
+        </tbody>
+    </table>
+    <hr>
     <table class="table table-striped">
         <thead>
             <tr>
@@ -45,44 +103,5 @@
             {% endfor %}
         </tbody>
     </table>
-    <table class="table table-borderless">
-        <tbody>
-            <tr>
-                <td>Total Efectivo:</td>
-                <td class="text-end">{{ total_efectivo|default:'0.00' }}</td>
-                <td></td>
-                <td>Total Comisión:</td>
-                <td class="text-end">{{ total_comision|default:'0.00' }}</td>
-            </tr>
-            <tr>
-                <td>Total Tarjeta:</td>
-                <td class="text-end">{{ total_tarjeta|default:'0.00' }}</td>
-                <td></td>
-                <td>Total Descuento:</td>
-                <td class="text-end">{{ total_descuento|default:'0.00' }}</td>
-            </tr>
-            <tr>
-                <td>Total Transferencia:</td>
-                <td class="text-end">{{ total_transferencia|default:'0.00' }}</td>
-                <td></td>
-                <td>Total General:</td>
-                <td class="text-end">{{ total_global|default:'0.00' }}</td>
-            </tr>
-            <tr>
-                <td>Total Total:</td>
-                <td class="text-end">{{ total_importe|default:'0.00' }}</td>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
-        </tbody>
-
-    </table>
-    
-    
-    
-    
-    
-    
 </div>
 {% endblock %}

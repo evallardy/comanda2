@@ -589,16 +589,6 @@ class CajaReporteView(LoginRequiredMixin, ListView):
         if not dia_contable_id:
             dia_contable = DiaContable.objects.filter(estatus=1).first()
             dia_contable_id = dia_contable.id
-#        queryset = Caja.objects.filter(comanda__dia_contable__id=dia_contable_id).values(
-#            'comanda__mesa',
-#            'comanda__observacion',
-#            'caja_grupo__id',
-#            'caja_grupo__importe_efectivo',
-#            'caja_grupo__importe_tarjeta',
-#            'caja_grupo__importe_transferencia',
-#            'caja_grupo__importe_comision',
-#            'caja_grupo__importe_descuento',
-#            ).distinct().order_by('comanda')
         queryset = Caja.objects.filter(comanda__dia_contable__id=dia_contable_id).values(
             'comanda__mesa',
             'comanda__observacion',
