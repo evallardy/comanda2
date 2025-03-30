@@ -2,26 +2,30 @@
 {% load static %}
 {% block content %}
 <style>
-    .card {
+.card {
     height: 100%;
     display: flex;
     flex-direction: column;
     border: solid 1px rgb(153, 156, 168);
     border-radius: 10px;
 }
-
 .card-body {
     display: flex;
     flex-direction: column;
     flex-grow: 1;
 }
-
 .card-text {
     flex-grow: 1;
 }
-
 .card .btn {
     margin-top: auto;
+}
+.cocina {
+    background-color: rgb(0, 165, 82);
+    color: white;
+}
+.bar {
+    background-color: rgb(181, 194, 3);
 }
 #botonCarritoContainer {
     position: fixed;
@@ -66,7 +70,7 @@
     <div class="row" id="productosFiltrados">
         {% for producto in datos.productos %}
         <div class="mt-2 col-md-3 col-sm-4 col-xxl-2 col-xl-3 col-lg-3 col-4 d-flex align-items-stretch"> <!-- Hace que todas las cards tengan la misma altura -->
-            <div class="card mb-8 d-flex flex-column tarjetas">
+            <div class="card mb-8 d-flex flex-column tarjetas {% if producto.tipo == 1 %} cocina {% else %} bar {% endif %}">
                 <div class="card-body d-flex flex-column">
                     {% if producto.imagen %}
                     <img src="{{ producto.imagen.url }}" class="card-img-top" alt="{{ producto.nombre }}">

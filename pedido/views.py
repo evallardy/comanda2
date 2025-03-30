@@ -29,7 +29,7 @@ class ComandaView(LoginRequiredMixin, View):
     def get(self, request):
         datos = {}
 
-        productos = Producto.objects.filter(estatus=1).order_by('nombre')
+        productos = Producto.objects.filter(estatus=1).order_by('-tipo', 'nombre')
         datos['productos'] = productos
 
         paquetes = Paquete.objects.filter(estatus=1).order_by('tipo_paquete', 'nombre')
