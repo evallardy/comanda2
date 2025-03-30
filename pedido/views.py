@@ -15,7 +15,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import redirect
 from django.core.exceptions import ValidationError
 from django.urls import reverse_lazy
-from django.db.models import Q, F, Value, DecimalField
+from django.db.models import Q, F, Value, DecimalField, Count
 
 from producto.models import Producto, Paquete, PaqueteProducto, ProductoInsumo
 from .models import DiaContable, Caja, Detalle, Comanda, Servicio, Pago
@@ -287,8 +287,7 @@ def guardar_datos(request):
 
 @login_required
 def obtener_comandas(request):
-    diaContable = DiaContable.objects.filter(estatus=1).first()
-    comandas = Comanda.objects.filter(diaContable=diaContable).values("id", "mesa", "observacion")
+    comandas = Comanda.objects.filter(dia_contable__estatus=1,estatus__in=(1,2)).values("id", "mesa", "observacion")
     return JsonResponse(list(comandas), safe=False)
 
 # Vista para listar los detalles
@@ -405,6 +404,12 @@ class CajaListView(LoginRequiredMixin, ListView):
         caja_estatus = {}
         comandas = Comanda.objects.filter(dia_contable__estatus=1,estatus__in=(1,2)).order_by('mesa','observacion')
 
+        # obtener las mesas que estan sin productos para poder cerrar
+        mesas_para_cerrar = Comanda.objects.filter(dia_contable__estatus=1, estatus=1).annotate(
+            total_cajas=Count('caja', distinct=True),
+            cajas_validas=Count('caja', filter=Q(caja__estatus__in=[0, 2]), distinct=True)
+        ).filter(total_cajas=F('cajas_validas')).values('id', 'mesa', 'observacion')
+
         for caja in Caja.objects.filter(estatus__in=(1,2),comanda__dia_contable__estatus=1):
             detalles = Detalle.objects.filter(caja=caja,estatus__in=(1,2,3))
 
@@ -422,6 +427,7 @@ class CajaListView(LoginRequiredMixin, ListView):
 
         context['comandas'] = comandas
         context['caja_estatus'] = caja_estatus
+        context['mesas_para_cerrar'] = mesas_para_cerrar
         return context
 
 @login_required
@@ -437,6 +443,14 @@ def pagar_caja(request):
 
         return JsonResponse({"message": "Pago procesado correctamente"})
     return redirect("caja_list")        
+
+@login_required
+def cerrar_comanda(request, id):
+
+    if request.method == "GET":
+        comanda = Comanda.objects.filter(id=id).update(estatus=3)
+
+    return redirect(reverse_lazy("caja"))     
 
 @login_required
 def guardar_pago(request):

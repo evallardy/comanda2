@@ -9,7 +9,7 @@
 
         <!-- Select para filtrar por comanda -->
         <div class="mb-3">
-            <label for="comandaSelect" class="form-label">Comandas :</label>
+            <label for="comandaSelect" class="form-label"><h5>Comandas :</h5></label>
             <select id="comandaSelect" class="form-select">
                 <option value="">Todas</option>
                 {% for comanda in comandas %}
@@ -35,7 +35,7 @@
                     <tr>
                         <th></th>
                         <th>Comanda</th>
-                        <th>Descripción</th>
+                        <th>Observación</th>
                         <th class="text-end">Cantidad</th>
                         <th class="text-end">Importe</th>
                         <th>Estatus</th>
@@ -66,6 +66,25 @@
 
                             </td>
                         </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <h5>Mesas para cerrar</h5>
+            <table class="table table-striped table-bordered mt-3">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Mesa</th>
+                        <th>Observación</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for mesa in mesas_para_cerrar %}
+                    <tr>
+                        <td>{{ mesa.mesa }}</td>
+                        <td>{{ mesa.observacion }}</td>
+                        <td><a href="{% url 'cerrarComanda' mesa.id %}">Cerrar</a></td>
+                    </tr>
                     {% endfor %}
                 </tbody>
             </table>

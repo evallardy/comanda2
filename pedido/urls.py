@@ -22,6 +22,7 @@ urlpatterns = [
     path('caja/pagar/', pagar_caja, name='pagar_caja'),
     path('guardar_pago/', guardar_pago, name='guardar_pago'),
     path('caja/global/', CajaReporteView.as_view(), name='global'),
+    path('caja/cerrar_comanda/<int:id>/', cerrar_comanda, name='cerrarComanda'),
 
     path('comandas/', ComandasView.as_view(), name='comandas'),
 
