@@ -287,7 +287,8 @@ def guardar_datos(request):
 
 @login_required
 def obtener_comandas(request):
-    comandas = Comanda.objects.all().values("id", "mesa", "observacion")
+    diaContable = DiaContable.objects.filter(estatus=1).first()
+    comandas = Comanda.objects.filter(diaContable=diaContable).values("id", "mesa", "observacion")
     return JsonResponse(list(comandas), safe=False)
 
 # Vista para listar los detalles
