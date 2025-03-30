@@ -83,7 +83,7 @@
                     <tr>
                         <td>{{ mesa.mesa }}</td>
                         <td>{{ mesa.observacion }}</td>
-                        <td><a href="{% url 'cerrarComanda' mesa.id %}">Cerrar</a></td>
+                        <td><a class="btn btn-danger" href="{% url 'cerrarComanda' mesa.id %}">Cerrar</a></td>
                     </tr>
                     {% endfor %}
                 </tbody>

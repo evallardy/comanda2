@@ -300,15 +300,15 @@ class DetalleListView(LoginRequiredMixin, ListView):
         opcion = self.kwargs.get('opcion', 1)  # Obtiene el valor de la opción desde la URL
         if opcion == 1 or opcion == 2:
             estatus = 1
-            detalle = Detalle.objects.filter(estatus=estatus, tipo=opcion).order_by('fecha_alta')
+            detalle = Detalle.objects.filter(comanda__dia_contable__estatus=1, estatus=estatus, tipo=opcion).order_by('fecha_alta')
         elif opcion == 3:
             estatus = 2
-            detalle = Detalle.objects.filter(estatus=estatus).order_by('fecha_alta')
+            detalle = Detalle.objects.filter(comanda__dia_contable__estatus=1, estatus=estatus).order_by('fecha_alta')
         elif opcion == 4:
-            detalle = Detalle.objects.filter(estatus__in=(0,1,2,3,4,5)).order_by('fecha_alta')
+            detalle = Detalle.objects.filter(comanda__dia_contable__estatus=1, estatus__in=(0,1,2,3,4,5)).order_by('fecha_alta')
         else:
             estatus = 100
-            detalle = Detalle.objects.filter(estatus>estatus).order_by('fecha_alta')
+            detalle = Detalle.objects.filter(comanda__dia_contable__estatus=1).filter(estatus>estatus).order_by('fecha_alta')
         return detalle
 
     def get_context_data(self, **kwargs):
@@ -330,6 +330,9 @@ class DetalleAtenderView(UpdateView):
     model = Detalle
     fields = []  # No usamos formulario, solo actualizamos el estatus
     template_name = 'pedido/detalle_atender.html'
+
+#    def get_queryset(self):
+#        detalle = Detalle.objects.filter(comanda__dia_contable__estatus=1).order_by('fecha_alta')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
