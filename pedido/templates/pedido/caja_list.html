@@ -4,310 +4,345 @@
 {% load form_filters %}
 {% block content %}
 {% load static %}
-    <div class="container mt-4">
-        <h2 class="text-center">Caja</h2>
+<style>
+    .titulo_columna {
+        padding-top: 7px;
+        padding-bottom: 7px;
+        height: 36px;
+        vertical-align: middle;
+        border: 1px solid rgb(221, 218, 218);
+    }
+    .detalle_columna {
+        background-color: #e9ecef;
+        border: 1px solid rgb(221, 218, 218);
+        padding-top: 8px;
+        padding-bottom: 8px;
+    }
+    .detalle_boton {
+        background-color: #e9ecef;
+        border: 1px solid rgb(221, 218, 218);
+        padding-top: 2px;
+        padding-bottom: 2px;
+    }
+    .detalle_columna1 {
+        border: 1px solid rgb(221, 218, 218);
+        padding-top: 8px;
+        padding-bottom: 8px;
+    }
+    .detalle_boton1 {
+        border: 1px solid rgb(221, 218, 218);
+        padding-top: 2px;
+        padding-bottom: 2px;
+    }
+</style>
+<div class="container mt-4">
+    <h2 class="text-center">Caja</h2>
 
-        <!-- Select para filtrar por comanda -->
-        <div class="mb-3">
-            <label for="comandaSelect" class="form-label"><h5>Comandas :</h5></label>
-            <select id="comandaSelect" class="form-select">
-                <option value="">Todas</option>
-                {% for comanda in comandas %}
-                    <option value="{{ comanda.id }}">{{ comanda }}</option>
-                {% endfor %}
-            </select>
+    <!-- Select para filtrar por comanda -->
+    <div class="mb-3">
+        <label for="comandaSelect" class="form-label">
+            <h5>Comandas :</h5>
+        </label>
+        <select id="comandaSelect" class="form-select">
+            <option value="">Todas</option>
+            {% for comanda in comandas %}
+            <option value="{{ comanda.id }}">{{ comanda }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+
+    <!-- Tabla con checkboxes -->
+    <form id="cajaForm" method="POST" action="{% url 'pagar_caja' %}">
+        {% csrf_token %}
+        <div class="row justify-content-between align-items-center">
+            <h4 class="col-auto mb-0">Total seleccionado: <span id="totalSeleccionado" class="fw-bold">0.00</span></h4>
+            <!-- Botón para abrir el modal -->
+            <button type="button" class="btn btn-success col-auto me-3" data-bs-toggle="modal"
+                data-bs-target="#modalPago">
+                Pagar Seleccionados
+            </button>
+
         </div>
+        <table class="table table-striped table-bordered mt-3">
+            <thead class="table-dark">
+                <tr>
+                    <th></th>
+                    <th>Comanda</th>
+                    <th>Observación</th>
+                    <th class="text-end">Cantidad</th>
+                    <th class="text-end">Importe</th>
+                    <th>Estatus</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for caja in cajas %}
+                <tr data-comanda="{{ caja.comanda.id }}">
+                    <td>
+                        <input type="checkbox" id="cb_{{caja.id}}" class="checkbox-caja" name="caja_{{caja.id}}"
+                            value="{{ caja.id }}" data-importe="{{ caja.importe }}">
+                    </td>
+                    <td>{{ caja.comanda }}
+                    </td>
+                    <td>{{ caja.descripcion }}</td>
+                    <td class="text-end">{{ caja.cantidad|intcomma }}</td>
+                    <td class="text-end">{{ caja.importe|intcomma }}</td>
+                    <td>
 
-
-        <!-- Tabla con checkboxes -->
-        <form id="cajaForm" method="POST" action="{% url 'pagar_caja' %}">
-            {% csrf_token %}
-            <div class="row justify-content-between align-items-center">
-                <h4 class="col-auto mb-0">Total seleccionado: <span id="totalSeleccionado" class="fw-bold">0.00</span></h4>
-                <!-- Botón para abrir el modal -->
-                <button type="button" class="btn btn-success col-auto me-3" data-bs-toggle="modal" data-bs-target="#modalPago">
-                    Pagar Seleccionados
-                </button>
-
-            </div>
-            <table class="table table-striped table-bordered mt-3">
-                <thead class="table-dark">
-                    <tr>
-                        <th></th>
-                        <th>Comanda</th>
-                        <th>Observación</th>
-                        <th class="text-end">Cantidad</th>
-                        <th class="text-end">Importe</th>
-                        <th>Estatus</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for caja in cajas %}
-                        <tr data-comanda="{{ caja.comanda.id }}">
-                            <td>
-                                <input type="checkbox" id="cb_{{caja.id}}" class="checkbox-caja" name="caja_{{caja.id}}" value="{{ caja.id }}" data-importe="{{ caja.importe }}">
-                            </td>
-                            <td>{{ caja.comanda }}
-                            </td>
-                            <td>{{ caja.descripcion }}</td>
-                            <td class="text-end">{{ caja.cantidad|intcomma }}</td>
-                            <td class="text-end">{{ caja.importe|intcomma }}</td>
-                            <td>
-                                
-                                {% if caja_estatus|get_item:caja.id == 'Completado' %}
-                                <label class="badge bg-success">
-                                {% elif caja_estatus|get_item:caja.id == 'En proceso' %}
-                                <label class="badge bg-warning">
+                        {% if caja_estatus|get_item:caja.id == 'Completado' %}
+                        <label class="badge bg-success">
+                            {% elif caja_estatus|get_item:caja.id == 'En proceso' %}
+                            <label class="badge bg-warning">
                                 {% else %}
                                 <label class="badge bg-info">
-                                {% endif %}
-                                {{ caja_estatus|get_item:caja.id }}
+                                    {% endif %}
+                                    {{ caja_estatus|get_item:caja.id }}
                                 </label>
 
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div class="container">
             <h5>Mesas para cerrar</h5>
-            <table class="table table-striped table-bordered mt-3">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Mesa</th>
-                        <th>Observación</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for mesa in mesas_para_cerrar %}
-                    <tr>
-                        <td>{{ mesa.mesa }}</td>
-                        <td>{{ mesa.observacion }}</td>
-                        <td><a class="btn btn-danger" href="{% url 'cerrarComanda' mesa.id %}">Cerrar</a></td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </form>
-    </div>
-    
-    <!-- Modal -->
-    <div class="modal fade" id="modalPago" tabindex="-1" aria-labelledby="modalPagoLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalPagoLabel">Pago</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div>
+                <div class="row d-flex align-items-center">
+                    <div class="col-2 bg-dark text-light titulo_columna"></div>
+                    <div class="col-3 bg-dark text-light titulo_columna">Mesa</div>
+                    <div class="col-7 bg-dark text-light titulo_columna">Observación</div>
                 </div>
-                <div class="modal-body">
-                    <div class="col-12 row" style="color: blue; font-weight: bold;">
-                        <div class="col-6">
-                            <h5>Total a Pagar: <span id="totalPagoModal">0.00</span></h5>
-                        </div>
-                        <div class="col-6">
-                            <h5>Total Pagado: <span id="totalPagadoModal">0.00</span></h5>
-                        </div>
+                <div style="vertical-align: middle;">
+                    {% for mesa in mesas_para_cerrar %}
+                    <div class="co-12 row d-flex align-items-center">
+                        <div class="col-2 {% if forloop.counter0|divisibleby:2 %}detalle_boton{% else %}detalle_boton1{% endif %}"><a class="btn btn-danger" href="{% url 'cerrarComanda' mesa.id %}">Cerrar</a></div>
+                        <div class="col-3 {% if forloop.counter0|divisibleby:2 %}detalle_columna{% else %}detalle_columna1{% endif %}">{{ mesa.mesa }}</div>
+                        <div class="col-7 {% if forloop.counter0|divisibleby:2 %}detalle_columna{% else %}detalle_columna1{% endif %}">{{ mesa.observacion }}</div>
                     </div>
-                    <hr>
-                    <div class="mb-3">
-                        <label for="efectivo" class="form-label">Efectivo</label>
-                        <input type="number" class="form-control text-end" id="efectivo" placeholder="Efectivo">
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="modalPago" tabindex="-1" aria-labelledby="modalPagoLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalPagoLabel">Pago</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="col-12 row" style="color: blue; font-weight: bold;">
+                    <div class="col-6">
+                        <h5>Total a Pagar: <span id="totalPagoModal">0.00</span></h5>
                     </div>
-                    <div class="mb-3 col-12 row">
-                        <div class="col-5">
-                            <label for="tarjeta" class="form-label">Tarjeta</label>
-                            <input type="number" class="form-control text-end" id="tarjeta" placeholder="Tarjeta">
-                        </div>
-                        <div class="col-5">
-                            <label for="comisionCalculada" class="form-label">Comisión calculada</label>
-                            <input type="number" class="form-control text-end" id="comisionCalculada" readonly>
-                        </div>
-                        <div class="col-2">
-                            <label for="porcentaje" class="form-label">Porcentaje</label>
-                            <input type="number" class="form-control text-end" id="porcentaje" value="6">
-                        </div>
+                    <div class="col-6">
+                        <h5>Total Pagado: <span id="totalPagadoModal">0.00</span></h5>
                     </div>
-                    <div class="mb-3">
-                        <label for="transferencia" class="form-label">Transferencia</label>
-                        <input type="number" class="form-control text-end" id="transferencia" placeholder="Transferencia">
+                </div>
+                <hr>
+                <div class="mb-3">
+                    <label for="efectivo" class="form-label">Efectivo</label>
+                    <input type="number" class="form-control text-end" id="efectivo" placeholder="Efectivo">
+                </div>
+                <div class="mb-3 col-12 row">
+                    <div class="col-5">
+                        <label for="tarjeta" class="form-label">Tarjeta</label>
+                        <input type="number" class="form-control text-end" id="tarjeta" placeholder="Tarjeta">
                     </div>
-                    <div class="mb-3">
-                        <label for="comision" class="form-label">Comisión</label>
-                        <input type="number" class="form-control text-end" id="comision" placeholder="Comisión">
+                    <div class="col-5">
+                        <label for="comisionCalculada" class="form-label">Comisión calculada</label>
+                        <input type="number" class="form-control text-end" id="comisionCalculada" readonly>
                     </div>
-                    <div class="mb-3">
-                        <label for="descuento" class="form-label">Descuento</label>
-                        <input type="number" class="form-control text-end" id="descuento" placeholder="Descuento">
+                    <div class="col-2">
+                        <label for="porcentaje" class="form-label">Porcentaje</label>
+                        <input type="number" class="form-control text-end" id="porcentaje" value="6">
                     </div>
-                    <div class="text-end">
-                        <button type="button" class="btn btn-primary" id="guardarPagoBtn">Guardar Pago</button>
-                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="transferencia" class="form-label">Transferencia</label>
+                    <input type="number" class="form-control text-end" id="transferencia" placeholder="Transferencia">
+                </div>
+                <div class="mb-3">
+                    <label for="comision" class="form-label">Comisión</label>
+                    <input type="number" class="form-control text-end" id="comision" placeholder="Comisión">
+                </div>
+                <div class="mb-3">
+                    <label for="descuento" class="form-label">Descuento</label>
+                    <input type="number" class="form-control text-end" id="descuento" placeholder="Descuento">
+                </div>
+                <div class="text-end">
+                    <button type="button" class="btn btn-primary" id="guardarPagoBtn">Guardar Pago</button>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <form id="formPago" method="POST" action="{% url 'guardar_pago' %}">
-        {% csrf_token %}
-        <input type="hidden" id="importeEfectivo" name="importe_efectivo">
-        <input type="hidden" id="importeTarjeta" name="importe_tarjeta">
-        <input type="hidden" id="importeTransferencia" name="importe_transferencia">
-        <input type="hidden" id="importeComision" name="importe_comision">
-        <input type="hidden" id="importeDescuento" name="importe_descuento">
-        <input type="hidden" id="pagosSeleccionados" name="pagos_seleccionados">
-    </form>
+<form id="formPago" method="POST" action="{% url 'guardar_pago' %}">
+    {% csrf_token %}
+    <input type="hidden" id="importeEfectivo" name="importe_efectivo">
+    <input type="hidden" id="importeTarjeta" name="importe_tarjeta">
+    <input type="hidden" id="importeTransferencia" name="importe_transferencia">
+    <input type="hidden" id="importeComision" name="importe_comision">
+    <input type="hidden" id="importeDescuento" name="importe_descuento">
+    <input type="hidden" id="pagosSeleccionados" name="pagos_seleccionados">
+</form>
 
-    <script>
+<script>
+    const checkboxes = document.querySelectorAll(".checkbox-caja");
+    checkboxes.forEach(checkbox => {
+        checkbox.style.display = "none";
+    });
+
+    guardarPagoBtn.addEventListener("click", function () {
+        // Asignar los valores al formulario
+        document.getElementById("importeEfectivo").value = document.getElementById("efectivo").value || 0;
+        document.getElementById("importeTarjeta").value = document.getElementById("tarjeta").value || 0;
+        document.getElementById("importeTransferencia").value = document.getElementById("transferencia").value || 0;
+        document.getElementById("importeComision").value = document.getElementById("comision").value || 0;
+        document.getElementById("importeDescuento").value = document.getElementById("descuento").value || 0;
+
+        let seleccionados = [];
+
+        document.querySelectorAll(".checkbox-caja:checked").forEach(checkbox => {
+            seleccionados.push(checkbox.value); // Tomamos el value del checkbox
+        });
+
+        // Asignar la lista de valores al input hidden
+        document.getElementById("pagosSeleccionados").value = seleccionados;
+
+        // Enviar el formulario
+        document.getElementById("formPago").submit();
+    });
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const totalSpan = document.getElementById("totalSeleccionado");
+        const totalPagoModal = document.getElementById("totalPagoModal");
+        const totalPagadoModal = document.getElementById("totalPagadoModal");
+        const efectivoInput = document.getElementById("efectivo");
+        const tarjetaInput = document.getElementById("tarjeta");
+        const comisionCalculadaInput = document.getElementById("comisionCalculada");
+        const porcentajeInput = document.getElementById("porcentaje");
+        const transferenciaInput = document.getElementById("transferencia");
+        const comisionInput = document.getElementById("comision");
+        const descuentoInput = document.getElementById("descuento");
+        const guardarPagoBtn = document.getElementById("guardarPagoBtn");
+
+        // Actualizar total en el modal cuando se abre
+        const pagarSeleccionadosBtn = document.querySelector(".btn.btn-success");
+        pagarSeleccionadosBtn.addEventListener("click", function () {
+            // Establecer el total en el modal
+            totalPagoModal.textContent = totalSpan.textContent;
+            // Limpiar campos
+            efectivoInput.value = '';
+            tarjetaInput.value = '';
+            comisionCalculadaInput.value = '';
+            porcentajeInput.value = '6';
+            transferenciaInput.value = '';
+            comisionInput.value = '';
+            descuentoInput.value = '';
+            // Deshabilitar el botón al abrir el modal
+            //                guardarPagoBtn.disabled = true;
+        });
+
+        // Función para validar la suma
+        function validarSuma() {
+            const efectivo = parseFloat(efectivoInput.value) || 0;
+            const tarjeta = parseFloat(tarjetaInput.value) || 0;
+            const comisionCalculada = parseFloat(comisionCalculadaInput.value) || 0;
+            const porcentaje = parseFloat(porcentajeInput.value) || 0;
+            const transferencia = parseFloat(transferenciaInput.value) || 0;
+            const comision = parseFloat(comisionInput.value) || 0;
+            const descuento = parseFloat(descuentoInput.value) || 0;
+
+            const total = parseFloat(totalSpan.textContent.replace(/,/g, '')); // Convertir total sin comas
+
+            const suma = efectivo + tarjeta + transferencia + comision - descuento;
+
+            totalPagadoModal.textContent = suma.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+            if (tarjeta > 0 && porcentaje >= 1) {
+                const porcentajeObtenido = porcentaje.toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) / 100;
+                const comisionX = tarjeta * porcentajeObtenido;
+                comisionCalculadaInput.value = comisionX.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            } else {
+                comisionCalculadaInput.value = '0.00';
+            }
+
+            // Si la suma es igual al total, habilitar el botón
+            //                if ((suma === total) && (suma > 0)) {
+            //                    guardarPagoBtn.disabled = false;
+            //                } else {
+            //                    guardarPagoBtn.disabled = true;
+            //                }
+        }
+
+        // Evento para validar cuando cambian los valores de los inputs
+        efectivoInput.addEventListener("input", validarSuma);
+        tarjetaInput.addEventListener("input", validarSuma);
+        transferenciaInput.addEventListener("input", validarSuma);
+        comisionInput.addEventListener("input", validarSuma);
+        porcentajeInput.addEventListener("input", validarSuma);
+        descuentoInput.addEventListener("input", validarSuma);
+    });
+
+    document.addEventListener("DOMContentLoaded", function () {
         const checkboxes = document.querySelectorAll(".checkbox-caja");
-        checkboxes.forEach(checkbox => {
-            checkbox.style.display = "none";
-        });
+        const totalSpan = document.getElementById("totalSeleccionado");
+        const comandaSelect = document.getElementById("comandaSelect");
 
-        guardarPagoBtn.addEventListener("click", function () {
-            // Asignar los valores al formulario
-            document.getElementById("importeEfectivo").value = document.getElementById("efectivo").value || 0;
-            document.getElementById("importeTarjeta").value = document.getElementById("tarjeta").value || 0;
-            document.getElementById("importeTransferencia").value = document.getElementById("transferencia").value || 0;
-            document.getElementById("importeComision").value = document.getElementById("comision").value || 0;
-            document.getElementById("importeDescuento").value = document.getElementById("descuento").value || 0;
-
-            let seleccionados = [];
-
-            document.querySelectorAll(".checkbox-caja:checked").forEach(checkbox => {
-                seleccionados.push(checkbox.value); // Tomamos el value del checkbox
-            });
-
-            // Asignar la lista de valores al input hidden
-            document.getElementById("pagosSeleccionados").value = seleccionados;
-
-            // Enviar el formulario
-            document.getElementById("formPago").submit();
-        });
-
-        document.addEventListener("DOMContentLoaded", function () {
-            const totalSpan = document.getElementById("totalSeleccionado");
-            const totalPagoModal = document.getElementById("totalPagoModal");
-            const totalPagadoModal = document.getElementById("totalPagadoModal");
-            const efectivoInput = document.getElementById("efectivo");
-            const tarjetaInput = document.getElementById("tarjeta");
-            const comisionCalculadaInput = document.getElementById("comisionCalculada");
-            const porcentajeInput = document.getElementById("porcentaje");
-            const transferenciaInput = document.getElementById("transferencia");
-            const comisionInput = document.getElementById("comision");
-            const descuentoInput = document.getElementById("descuento");
-            const guardarPagoBtn = document.getElementById("guardarPagoBtn");
-
-            // Actualizar total en el modal cuando se abre
-            const pagarSeleccionadosBtn = document.querySelector(".btn.btn-success");
-            pagarSeleccionadosBtn.addEventListener("click", function () {
-                // Establecer el total en el modal
-                totalPagoModal.textContent = totalSpan.textContent;
-                // Limpiar campos
-                efectivoInput.value = '';
-                tarjetaInput.value = '';
-                comisionCalculadaInput.value = '';
-                porcentajeInput.value = '6';
-                transferenciaInput.value = '';
-                comisionInput.value = '';
-                descuentoInput.value = '';
-                // Deshabilitar el botón al abrir el modal
-//                guardarPagoBtn.disabled = true;
-            });
-
-            // Función para validar la suma
-            function validarSuma() {
-                const efectivo = parseFloat(efectivoInput.value) || 0;
-                const tarjeta = parseFloat(tarjetaInput.value) || 0;
-                const comisionCalculada = parseFloat(comisionCalculadaInput.value) || 0;
-                const porcentaje = parseFloat(porcentajeInput.value) || 0;
-                const transferencia = parseFloat(transferenciaInput.value) || 0;
-                const comision = parseFloat(comisionInput.value) || 0;
-                const descuento = parseFloat(descuentoInput.value) || 0;
-
-                const total = parseFloat(totalSpan.textContent.replace(/,/g, '')); // Convertir total sin comas
-
-                const suma = efectivo + tarjeta + transferencia + comision - descuento;
-
-                totalPagadoModal.textContent = suma.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-                if ( tarjeta > 0 && porcentaje >= 1) {
-                    const porcentajeObtenido = porcentaje.toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) / 100;
-                    const comisionX = tarjeta * porcentajeObtenido;
-                    comisionCalculadaInput.value = comisionX.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                } else {
-                    comisionCalculadaInput.value = '0.00';
-                }
-                
-                // Si la suma es igual al total, habilitar el botón
-//                if ((suma === total) && (suma > 0)) {
-//                    guardarPagoBtn.disabled = false;
-//                } else {
-//                    guardarPagoBtn.disabled = true;
-//                }
-            }
-
-            // Evento para validar cuando cambian los valores de los inputs
-            efectivoInput.addEventListener("input", validarSuma);
-            tarjetaInput.addEventListener("input", validarSuma);
-            transferenciaInput.addEventListener("input", validarSuma);
-            comisionInput.addEventListener("input", validarSuma);
-            porcentajeInput.addEventListener("input", validarSuma);
-            descuentoInput.addEventListener("input", validarSuma);
-        });
-
-        document.addEventListener("DOMContentLoaded", function () {
-            const checkboxes = document.querySelectorAll(".checkbox-caja");
-            const totalSpan = document.getElementById("totalSeleccionado");
-            const comandaSelect = document.getElementById("comandaSelect");
-
-            // Función para calcular el total seleccionado
-            function calcularTotal() {
-                let total = 0;
-                checkboxes.forEach(checkbox => {
-                    if (checkbox.checked) {
-                        dato = parseFloat(checkbox.getAttribute("data-importe").replace(/,/g, ''));
-                        total += dato;
-                    }
-                });
-                totalSpan.textContent = total.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            }
-
-            // Evento para actualizar el total al marcar checkboxes
+        // Función para calcular el total seleccionado
+        function calcularTotal() {
+            let total = 0;
             checkboxes.forEach(checkbox => {
-                checkbox.addEventListener("change", calcularTotal);
-            });
-
-            // Evento para filtrar por comanda
-            comandaSelect.addEventListener("change", function () {
-                const selectedComanda = this.value;
-                const rows = document.querySelectorAll("tbody tr");
-
-                document.querySelectorAll("tbody tr").forEach(row => {
-                    if (selectedComanda === "" || row.getAttribute("data-comanda") === selectedComanda) {
-                        row.style.display = "";
-                    } else {
-                        row.style.display = "none";
-                    }
-                });
-
-                if (selectedComanda === "") { 
-                    checkboxes.forEach(checkbox => {
-                        checkbox.style.display = "none";
-                    });
-                } else {
-                    checkboxes.forEach(checkbox => {
-                        checkbox.style.display = "";
-                    });
+                if (checkbox.checked) {
+                    dato = parseFloat(checkbox.getAttribute("data-importe").replace(/,/g, ''));
+                    total += dato;
                 }
-
-                // Deseleccionar todos los checkboxes
-                checkboxes.forEach(checkbox => {
-                    checkbox.checked = false;
-                });
-
-                // Actualizar el total a 0.00 al desmarcar los checkboxes
-                totalSpan.textContent = "0.00";
             });
+            totalSpan.textContent = total.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        // Evento para actualizar el total al marcar checkboxes
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener("change", calcularTotal);
         });
-    </script>
+
+        // Evento para filtrar por comanda
+        comandaSelect.addEventListener("change", function () {
+            const selectedComanda = this.value;
+            const rows = document.querySelectorAll("tbody tr");
+
+            document.querySelectorAll("tbody tr").forEach(row => {
+                if (selectedComanda === "" || row.getAttribute("data-comanda") === selectedComanda) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
+            });
+
+            if (selectedComanda === "") {
+                checkboxes.forEach(checkbox => {
+                    checkbox.style.display = "none";
+                });
+            } else {
+                checkboxes.forEach(checkbox => {
+                    checkbox.style.display = "";
+                });
+            }
+
+            // Deseleccionar todos los checkboxes
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = false;
+            });
+
+            // Actualizar el total a 0.00 al desmarcar los checkboxes
+            totalSpan.textContent = "0.00";
+        });
+    });
+</script>
 {% endblock %}

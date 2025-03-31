@@ -14,6 +14,7 @@ urlpatterns = [
     path('pedido/agregar_carrito/', agregar_al_carrito, name='agregar_carrito'),
     path("guardar/", guardar_datos, name="guardar_datos"),
     path("api/comandas/", obtener_comandas, name="obtener_comandas"),
+    path("actualizar_sesion/", actualizar_sesion, name="actualizar_sesion"),
 
     path('pedido/comanda/', ComandaView.as_view(), name='comanda'),
     path('servicios/', ServicioListView.as_view(), name='servicios'),

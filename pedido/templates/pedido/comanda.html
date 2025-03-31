@@ -275,10 +275,13 @@
                 actualizarContadorCarrito();
             },
             error: function(error) {
-                alert("Error al guardar");
+                let responseJSON = JSON.parse(error.responseText);
+                errorMensaje = responseJSON.error || errorMensaje;
+                alert(errorMensaje);
             }
         });
     });
+
     $(document).ready(function () {
         $('#bt_modal_insumos').on('click', function() {
             $('#modalInsumos').modal('hide');
@@ -315,6 +318,7 @@
             }
         });
     });
+
     function envia_carrito(tipo, producto_id, nombre_producto, precio,  area) {
         input_cantidad = '';
 
@@ -368,6 +372,7 @@
             }
         });
     }
+
     function agregarProductoATabla(tipo, producto_id, nombre_producto, cantidad, adicionales, precio, area) {
 
         // Si no existe, agregar una nueva fila
@@ -762,6 +767,18 @@
 
         // 🔹 Cerrar el modal
         $('#modalInsumos').modal('hide');
+
+        $.ajax({
+            url: "/pedido/actualizar_sesion/",  // Ruta en Django
+            type: "POST",
+            headers: { "X-CSRFToken": "{{ csrf_token }}" },
+            success: function (response) {
+
+            },
+            error: function () {
+                alert("Error");
+            }
+        });
     }
 
     function guardarPaquete() {
@@ -864,6 +881,7 @@
             input.attr("id", `id_adicionales_${nuevoNumero}`);
         });
     }
+
     function actualizarContadorCarrito() {
         let totalProductos = 0;
 

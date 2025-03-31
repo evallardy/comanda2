@@ -194,94 +194,108 @@ def agregar_al_carrito(request):
         }
 
         request.session["carrito"] = carrito  # Guardar en sesión
+        request.session["detalleOk"] = "No"
         return JsonResponse({"mensaje": "Producto agregado correctamente.", "adicionales": adicionales, "precio": precio, "area": area})
 
     return JsonResponse({"error": "Método no permitido."}, status=405)    
 
 @login_required
+def actualizar_sesion(request):
+    if request.method == "POST":
+        request.session["detalleOk"] = "Si"
+        return JsonResponse({"mensaje": "Sesión actualizada"})
+    return JsonResponse({"error": "Método no permitido"}, status=400)
+
+@login_required
 def guardar_datos(request):
     if request.method == "POST":
-        try:
-            with transaction.atomic():
-                datos = json.loads(request.body)  # Convertir JSON en diccionario Python
-                productos = datos.get("productos", [])
-                datos_producto = productos[0]
-                accion = datos_producto.get("comanda")
-                mesa_numero = datos_producto.get("mesa_numero")
-                mesa_observacion = datos_producto.get("mesa_observacion")
+        detalleOk = request.session.get("detalleOk", "No")
+        if detalleOk == 'Si':
+            try:
+                with transaction.atomic():
+                    datos = json.loads(request.body)  # Convertir JSON en diccionario Python
+                    productos = datos.get("productos", [])
+                    datos_producto = productos[0]
+                    accion = datos_producto.get("comanda")
+                    mesa_numero = datos_producto.get("mesa_numero")
+                    mesa_observacion = datos_producto.get("mesa_observacion")
 
-                dia_contable = DiaContable.objects.filter(estatus=1).first()
+                    dia_contable = DiaContable.objects.filter(estatus=1).first()
 
-                if accion == 'Nueva':
-                    comanda = Comanda.objects.create (
-                        mesa = mesa_numero,
-                        observacion = mesa_observacion,
-                        dia_contable = dia_contable,
-                    )
-                else:
-                    comanda = Comanda.objects.filter(id=mesa_numero).first()
+                    if accion == 'Nueva':
+                        comanda = Comanda.objects.create (
+                            mesa = mesa_numero,
+                            observacion = mesa_observacion,
+                            dia_contable = dia_contable,
+                        )
+                    else:
+                        comanda = Comanda.objects.filter(id=mesa_numero).first()
 
-                # Procesar cada producto
-                for producto in productos:
+                    # Procesar cada producto
+                    for producto in productos:
 
-                    total = float(producto["cantidad"]) * float(producto["precio"])
+                        total = float(producto["cantidad"]) * float(producto["precio"])
 
-                    titulo = producto["titulo"],
+                        titulo = producto["titulo"],
 
-                    caja = Caja.objects.create (
-                        comanda = comanda,
-                        descripcion = titulo[0],
-                        cantidad = producto["cantidad"],
-                        precio_unitario = producto["precio"],
-                        importe = total,
-                    )
+                        caja = Caja.objects.create (
+                            comanda = comanda,
+                            descripcion = titulo[0],
+                            cantidad = producto["cantidad"],
+                            precio_unitario = producto["precio"],
+                            importe = total,
+                        )
 
-                    if titulo[0].startswith("Combo") or titulo[0].startswith("Promoción"):
-                        adicionales = json.loads(producto["adicionales"])
-                        for adicional in adicionales:
-                            nombre_producto = adicional['nombre']
-                            area = adicional['area']
-                            articulos = adicional['producto']
-                            for insumos in articulos:
-                                complementos = insumos['insumos'][0]
-                                coma = ''
+                        if titulo[0].startswith("Combo") or titulo[0].startswith("Promoción"):
+                            adicionales = json.loads(producto["adicionales"])
+                            for adicional in adicionales:
+                                nombre_producto = adicional['nombre']
+                                area = adicional['area']
+                                articulos = adicional['producto']
+                                for insumos in articulos:
+                                    complementos = insumos['insumos'][0]
+                                    coma = ''
+                                    Ingredientes = 'Ingredientes : '
+                                    for complemento in complementos:
+                                        if complemento['valor'] == 1:
+                                            Ingredientes += coma + complemento['nombre']
+                                            coma = ', '
+                                    detalle = Detalle.objects.create (
+                                        caja = caja,
+                                        comanda = comanda,
+                                        producto = nombre_producto,
+                                        tipo = int(area),
+                                        especificacion = Ingredientes,
+                                    )
+                        else:
+                            adicionales = json.loads(producto["adicionales"])
+                            area = producto['area']
+                            for adicional in adicionales:
+                                nombre_producto = adicional['nombre']
                                 Ingredientes = 'Ingredientes : '
-                                for complemento in complementos:
-                                    if complemento['valor'] == 1:
-                                        Ingredientes += coma + complemento['nombre']
+                                coma = ''
+                                for insumo in adicional['producto'][0]['insumos']:
+                                    if insumo['valor'] == 1:
+                                        Ingredientes += coma + insumo['nombre']
                                         coma = ', '
                                 detalle = Detalle.objects.create (
                                     caja = caja,
                                     comanda = comanda,
                                     producto = nombre_producto,
-                                    tipo = int(area),
+                                    tipo = area,
                                     especificacion = Ingredientes,
                                 )
-                    else:
-                        adicionales = json.loads(producto["adicionales"])
-                        area = producto['area']
-                        for adicional in adicionales:
-                            nombre_producto = adicional['nombre']
-                            Ingredientes = 'Ingredientes : '
-                            coma = ''
-                            for insumo in adicional['producto'][0]['insumos']:
-                                if insumo['valor'] == 1:
-                                    Ingredientes += coma + insumo['nombre']
-                                    coma = ', '
-                            detalle = Detalle.objects.create (
-                                caja = caja,
-                                comanda = comanda,
-                                producto = nombre_producto,
-                                tipo = area,
-                                especificacion = Ingredientes,
-                            )
 
 
-            return HttpResponseRedirect(reverse('index'))
-#            return JsonResponse({"mensaje": "Datos guardados correctamente"}, status=200)
+                return HttpResponseRedirect(reverse('index'))
+    #            return JsonResponse({"mensaje": "Datos guardados correctamente"}, status=200)
 
-        except json.JSONDecodeError:
-            return JsonResponse({"error": "Error en formato JSON"}, status=400)
+            except json.JSONDecodeError:
+                return JsonResponse({"error": "Error en formato JSON"}, status=400)
+
+        else:
+
+            return JsonResponse({"error": "No haz detallado el pedido"}, status=400)
 
     return JsonResponse({"error": "Método no permitido"}, status=400)
 
