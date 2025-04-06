@@ -75,7 +75,7 @@ client_id = settings.CLIENT_ID
 client_secret = settings.CLIENT_SECRET
 redirect_uri = settings.REDIRECT_URI
 
-scope = 'playlist-modify-public'
+scope = 'playlist-modify-public playlist-modify-private'
 
 sp_oauth = SpotifyOAuth(
     client_id=client_id,
