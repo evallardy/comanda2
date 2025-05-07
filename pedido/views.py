@@ -123,7 +123,7 @@ def agregar_al_carrito(request):
             productos = []
             contenido = PaqueteProducto.objects.filter(paquete_id=producto_id).order_by("producto__nombre")
 
-            for pieza in contenido:
+            for pieza in contenido: 
                 id = pieza.producto.id
                 paquete_area = pieza.producto.tipo
                 nombre = pieza.producto.nombre
