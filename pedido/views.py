@@ -120,6 +120,7 @@ def agregar_al_carrito(request):
                 adicionales["insumos"].append(ingredientes)  # Agregar una copia independiente
 
         else:
+
             productos = []
             contenido = PaqueteProducto.objects.filter(paquete_id=producto_id).order_by("producto__nombre")
 
